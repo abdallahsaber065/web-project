@@ -6,6 +6,71 @@
 
 const { pool } = require('../config/database');
 
+// Helper: ensure author names exist and return their IDs
+async function getOrCreateAuthorIdsByNames(names, connection) {
+    const ids = [];
+    const seen = new Set();
+    for (let name of names) {
+        if (!name) continue;
+        name = String(name).trim().replace(/\s+/g, ' ');
+        if (!name) continue;
+        const lowerName = name.toLowerCase();
+        if (seen.has(lowerName)) continue; // avoid duplicates
+        seen.add(lowerName);
+
+        // Try to find existing author by case-insensitive match
+        const [rows] = await connection.execute(
+            'SELECT id FROM authors WHERE LOWER(name) = LOWER(?) LIMIT 1',
+            [name]
+        );
+
+        if (rows.length > 0) {
+            ids.push(rows[0].id);
+            continue;
+        }
+
+        // Insert new author
+        const [insertResult] = await connection.execute(
+            'INSERT INTO authors (name) VALUES (?)',
+            [name]
+        );
+        ids.push(insertResult.insertId);
+    }
+    return ids;
+}
+
+// Helper: ensure category names exist and return their IDs
+async function getOrCreateCategoryIdsByNames(names, connection) {
+    const ids = [];
+    const seen = new Set();
+    for (let name of names) {
+        if (!name) continue;
+        name = String(name).trim().replace(/\s+/g, ' ');
+        if (!name) continue;
+        const lowerName = name.toLowerCase();
+        if (seen.has(lowerName)) continue;
+        seen.add(lowerName);
+
+        const [rows] = await connection.execute(
+            'SELECT id FROM categories WHERE LOWER(name) = LOWER(?) LIMIT 1',
+            [name]
+        );
+
+        if (rows.length > 0) {
+            ids.push(rows[0].id);
+            continue;
+        }
+
+        // Insert new category
+        const [insertResult] = await connection.execute(
+            'INSERT INTO categories (name) VALUES (?)',
+            [name]
+        );
+        ids.push(insertResult.insertId);
+    }
+    return ids;
+}
+
 /**
  * Get all books with pagination and filters
  * GET /api/books
@@ -203,7 +268,9 @@ const createBook = async (req, res) => {
         publication_year,
         total_copies,
         author_ids,
-        category_ids = []
+        author_names,
+        category_ids = [],
+        category_names
     } = req.body;
 
     const connection = await pool.getConnection();
@@ -220,16 +287,44 @@ const createBook = async (req, res) => {
 
         const bookId = result.insertId;
 
+        // Prepare authors: accept author_ids or author_names
+        let authorIdsArray = [];
+        if (author_ids && Array.isArray(author_ids)) {
+            authorIdsArray = author_ids.map(id => parseInt(id)).filter(Boolean);
+        } else if (typeof author_ids === 'string' && author_ids.trim() !== '') {
+            authorIdsArray = author_ids.split(',').map(s => parseInt(s.trim())).filter(Boolean);
+        }
+
+        // If author_names provided, create or find those authors
+        if (author_names) {
+            const names = Array.isArray(author_names) ? author_names : (String(author_names).split(',').map(s => s.trim()).filter(Boolean));
+            const newIds = await getOrCreateAuthorIdsByNames(names, connection);
+            authorIdsArray = Array.from(new Set([...authorIdsArray, ...newIds]));
+        }
+
         // Insert book-author relationships
-        for (const authorId of author_ids) {
+        for (const authorId of authorIdsArray) {
             await connection.execute(
                 'INSERT INTO book_authors (book_id, author_id) VALUES (?, ?)',
                 [bookId, authorId]
             );
         }
+        // Prepare categories: accept category_ids or category_names
+        let categoryIdsArray = [];
+        if (category_ids && Array.isArray(category_ids)) {
+            categoryIdsArray = category_ids.map(id => parseInt(id)).filter(Boolean);
+        } else if (typeof category_ids === 'string' && category_ids.trim() !== '') {
+            categoryIdsArray = category_ids.split(',').map(s => parseInt(s.trim())).filter(Boolean);
+        }
+
+        if (category_names) {
+            const catNames = Array.isArray(category_names) ? category_names : (String(category_names).split(',').map(s => s.trim()).filter(Boolean));
+            const newCatIds = await getOrCreateCategoryIdsByNames(catNames, connection);
+            categoryIdsArray = Array.from(new Set([...categoryIdsArray, ...newCatIds]));
+        }
 
         // Insert book-category relationships
-        for (const categoryId of category_ids) {
+        for (const categoryId of categoryIdsArray) {
             await connection.execute(
                 'INSERT INTO book_categories (book_id, category_id) VALUES (?, ?)',
                 [bookId, categoryId]
@@ -265,7 +360,9 @@ const updateBook = async (req, res) => {
         publication_year,
         total_copies,
         author_ids,
-        category_ids
+        author_names,
+        category_ids,
+        category_names
     } = req.body;
 
     const connection = await pool.getConnection();
@@ -316,10 +413,23 @@ const updateBook = async (req, res) => {
             ]
         );
 
-        // Update authors if provided
+        // Update authors if provided (accept ids or names)
+        let authorIdsArray = [];
         if (author_ids && Array.isArray(author_ids)) {
+            authorIdsArray = author_ids.map(id => parseInt(id)).filter(Boolean);
+        } else if (typeof author_ids === 'string' && author_ids.trim() !== '') {
+            authorIdsArray = author_ids.split(',').map(s => parseInt(s.trim())).filter(Boolean);
+        }
+
+        if (author_names) {
+            const names = Array.isArray(author_names) ? author_names : (String(author_names).split(',').map(s => s.trim()).filter(Boolean));
+            const newIds = await getOrCreateAuthorIdsByNames(names, connection);
+            authorIdsArray = Array.from(new Set([...authorIdsArray, ...newIds]));
+        }
+
+        if (authorIdsArray.length > 0) {
             await connection.execute('DELETE FROM book_authors WHERE book_id = ?', [id]);
-            for (const authorId of author_ids) {
+            for (const authorId of authorIdsArray) {
                 await connection.execute(
                     'INSERT INTO book_authors (book_id, author_id) VALUES (?, ?)',
                     [id, authorId]
@@ -327,10 +437,23 @@ const updateBook = async (req, res) => {
             }
         }
 
-        // Update categories if provided
+        // Update categories if provided (accept ids or names)
+        let categoryIdsArray = [];
         if (category_ids && Array.isArray(category_ids)) {
+            categoryIdsArray = category_ids.map(id => parseInt(id)).filter(Boolean);
+        } else if (typeof category_ids === 'string' && category_ids.trim() !== '') {
+            categoryIdsArray = category_ids.split(',').map(s => parseInt(s.trim())).filter(Boolean);
+        }
+
+        if (category_names) {
+            const names = Array.isArray(category_names) ? category_names : (String(category_names).split(',').map(s => s.trim()).filter(Boolean));
+            const newIds = await getOrCreateCategoryIdsByNames(names, connection);
+            categoryIdsArray = Array.from(new Set([...categoryIdsArray, ...newIds]));
+        }
+
+        if (categoryIdsArray.length > 0) {
             await connection.execute('DELETE FROM book_categories WHERE book_id = ?', [id]);
-            for (const categoryId of category_ids) {
+            for (const categoryId of categoryIdsArray) {
                 await connection.execute(
                     'INSERT INTO book_categories (book_id, category_id) VALUES (?, ?)',
                     [id, categoryId]

@@ -97,12 +97,49 @@ const validateBook = [
     body('total_copies')
         .isInt({ min: 1 }).withMessage('Total copies must be at least 1'),
 
+    // Accept either author_ids (array of IDs) or author_names (comma-separated string)
     body('author_ids')
+        .optional()
         .isArray({ min: 1 }).withMessage('At least one author is required'),
 
+    body('author_names')
+        .optional()
+        .custom(value => {
+            if (Array.isArray(value)) {
+                return value.every(v => (typeof v === 'string' && v.trim().length > 0));
+            }
+            if (typeof value === 'string') {
+                return value.trim().length > 0;
+            }
+            return false;
+        }).withMessage('Author names must be a string or an array of strings'),
+
+    // Accept either category_ids (array of IDs) or category_names (comma-separated string)
     body('category_ids')
         .optional()
         .isArray().withMessage('Categories must be an array'),
+
+    body('category_names')
+        .optional()
+        .custom(value => {
+            if (Array.isArray(value)) {
+                return value.every(v => (typeof v === 'string' && v.trim().length > 0));
+            }
+            if (typeof value === 'string') {
+                return value.trim().length > 0;
+            }
+            return false;
+        }).withMessage('Category names must be a string or an array of strings'),
+
+    // Custom validation: at least one of author_ids or author_names must be provided
+    body().custom((value, { req }) => {
+        const hasAuthorIds = (Array.isArray(req.body.author_ids) && req.body.author_ids.length > 0) || (typeof req.body.author_ids === 'string' && req.body.author_ids.trim() !== '');
+        const hasAuthorNames = (Array.isArray(req.body.author_names) && req.body.author_names.length > 0) || (typeof req.body.author_names === 'string' && req.body.author_names.trim() !== '');
+        if (!hasAuthorIds && !hasAuthorNames) {
+            throw new Error('At least one author is required');
+        }
+        return true;
+    }),
 
     handleValidationErrors
 ];

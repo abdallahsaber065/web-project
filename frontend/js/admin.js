@@ -246,6 +246,9 @@ document.getElementById('filter-loans-btn')?.addEventListener('click', () => {
     loadAllLoans(status);
 });
 
+// Initialize multi-select components
+let authorsSelect, categoriesSelect;
+
 // Add book button
 document.getElementById('add-book-btn')?.addEventListener('click', () => {
     const modal = document.getElementById('book-modal');
@@ -257,9 +260,41 @@ document.getElementById('add-book-btn')?.addEventListener('click', () => {
     form.dataset.mode = 'add';
     delete form.dataset.bookId;
 
+    // Initialize multi-selects
+    initializeMultiSelects();
+
     modal.style.display = 'block';
     modal.classList.add('active');
 });
+
+// Initialize multi-select components
+function initializeMultiSelects() {
+    if (!authorsSelect) {
+        authorsSelect = new MultiSelectAutocomplete('authors-select', {
+            label: 'Authors',
+            placeholder: 'Search or create authors...',
+            endpoint: '/authors',
+            required: true,
+            hint: 'Type to search existing authors or create new ones'
+        });
+    } else {
+        authorsSelect.clear();
+        authorsSelect.loadItems();
+    }
+
+    if (!categoriesSelect) {
+        categoriesSelect = new MultiSelectAutocomplete('categories-select', {
+            label: 'Categories',
+            placeholder: 'Search or create categories...',
+            endpoint: '/categories',
+            required: false,
+            hint: 'Type to search existing categories or create new ones'
+        });
+    } else {
+        categoriesSelect.clear();
+        categoriesSelect.loadItems();
+    }
+}
 
 // Edit book function
 const editBook = async (bookId) => {
@@ -284,22 +319,25 @@ const editBook = async (bookId) => {
         document.getElementById('book-available-copies').value = book.available_copies || 1;
         document.getElementById('book-description').value = book.description || '';
 
-        // Convert authors array to comma-separated string
-        const authorNames = book.authors ? book.authors.map(a => a.name).join(', ') : '';
-        document.getElementById('book-authors').value = authorNames;
+        // Initialize multi-selects
+        initializeMultiSelects();
 
-        // Convert categories array to comma-separated string
-        const categoryNames = book.categories ? book.categories.map(c => c.name).join(', ') : '';
-        document.getElementById('book-categories').value = categoryNames;
+        // Set selected authors
+        if (book.authors && book.authors.length > 0) {
+            authorsSelect.setSelectedItems(book.authors);
+        }
+
+        // Set selected categories
+        if (book.categories && book.categories.length > 0) {
+            categoriesSelect.setSelectedItems(book.categories);
+        }
 
         modal.style.display = 'block';
         modal.classList.add('active');
     } catch (error) {
         alert('Error loading book: ' + error.message);
     }
-};
-
-// Handle book form submission
+};// Handle book form submission
 document.getElementById('book-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -315,8 +353,10 @@ document.getElementById('book-form')?.addEventListener('submit', async (e) => {
         total_copies: parseInt(document.getElementById('book-copies').value) || 1,
         available_copies: parseInt(document.getElementById('book-available-copies').value) || 1,
         description: document.getElementById('book-description').value,
-        author_names: document.getElementById('book-authors').value,
-        category_names: document.getElementById('book-categories').value
+        author_ids: authorsSelect ? authorsSelect.getSelectedIds() : [],
+        author_names: authorsSelect ? authorsSelect.getSelectedItems().filter(i => !i.id).map(i => i.name) : [],
+        category_ids: categoriesSelect ? categoriesSelect.getSelectedIds() : [],
+        category_names: categoriesSelect ? categoriesSelect.getSelectedItems().filter(i => !i.id).map(i => i.name) : []
     };
 
     try {

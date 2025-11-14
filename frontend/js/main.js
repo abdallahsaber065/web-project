@@ -102,7 +102,20 @@ const hideMessage = (elementId) => {
 
 // Format date
 const formatDate = (dateString) => {
-    const date = new Date(dateString);
+    if (!dateString) return 'N/A';
+    let date;
+    // If format is YYYY-MM-DD (SQL DATE), append a time to ensure consistent parsing
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(dateString))) {
+        date = new Date(`${dateString}T00:00:00`);
+    } else {
+        date = new Date(dateString);
+    }
+
+    if (isNaN(date)) {
+        // fallback to original string if parsing failed
+        return String(dateString);
+    }
+
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 

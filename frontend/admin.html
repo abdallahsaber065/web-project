@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Library Management System</title>
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/multi-select.css">
 </head>
 <body>
     <!-- Navigation -->
@@ -104,14 +105,10 @@
                     <input type="number" id="book-available-copies" name="available_copies" required min="0" value="1">
                 </div>
                 <div class="form-group">
-                    <label for="book-authors">Authors (names, comma-separated) *</label>
-                    <input type="text" id="book-authors" name="author_names" required placeholder="e.g., George Orwell, J.K. Rowling">
-                    <small>Enter author names separated by commas</small>
+                    <div id="authors-select"></div>
                 </div>
                 <div class="form-group">
-                    <label for="book-categories">Categories (names, comma-separated)</label>
-                    <input type="text" id="book-categories" name="category_names" placeholder="e.g., Fiction, Science Fiction">
-                    <small>Enter category names separated by commas</small>
+                    <div id="categories-select"></div>
                 </div>
                 <div class="alert" id="book-form-error" style="display: none;"></div>
                 <button type="submit" class="btn btn-primary">Save Book</button>
@@ -127,6 +124,7 @@
     </footer>
 
     <script src="/js/main.js"></script>
+    <script src="/js/multi-select.js"></script>
     <script src="/js/admin.js"></script>
 </body>
 </html>
