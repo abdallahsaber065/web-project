@@ -27,14 +27,28 @@ const register = async (req, res) => {
             [name, email, password_hash, role === 'member' ? 'member' : role]
         );
 
+        // Generate JWT token for immediate login
+        const token = jwt.sign(
+            {
+                id: result.insertId,
+                email,
+                role: role === 'member' ? 'member' : role
+            },
+            config.jwt.secret,
+            { expiresIn: config.jwt.expiresIn }
+        );
+
         res.status(201).json({
             success: true,
             message: 'User registered successfully',
             data: {
-                id: result.insertId,
-                name,
-                email,
-                role: role === 'member' ? 'member' : role
+                token,
+                user: {
+                    id: result.insertId,
+                    name,
+                    email,
+                    role: role === 'member' ? 'member' : role
+                }
             }
         });
     } catch (error) {

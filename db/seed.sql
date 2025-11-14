@@ -10,23 +10,23 @@ USE library_management;
 
 -- Admin user
 INSERT INTO users (name, email, password_hash, role) VALUES
-('Admin User', 'admin@library.com', '$2b$10$rKZM8qY3LX7vZ5YhF.WJUOxKXxNZ4J8FHlJ3h2KqVLWxGKqM1yZHi', 'admin');
+('Admin User', 'admin@library.com', '$2b$10$mrzUPJRVEgrqHOV4.LBhpeDEzfhtcwJ1Pw8tqer0KVSYOYYSPgkDO', 'admin');
 
 -- Librarian users
 INSERT INTO users (name, email, password_hash, role) VALUES
-('Sarah Johnson', 'sarah.j@library.com', '$2b$10$rKZM8qY3LX7vZ5YhF.WJUOxKXxNZ4J8FHlJ3h2KqVLWxGKqM1yZHi', 'librarian'),
-('Michael Chen', 'michael.c@library.com', '$2b$10$rKZM8qY3LX7vZ5YhF.WJUOxKXxNZ4J8FHlJ3h2KqVLWxGKqM1yZHi', 'librarian');
+('Sarah Johnson', 'sarah.j@library.com', '$2b$10$mrzUPJRVEgrqHOV4.LBhpeDEzfhtcwJ1Pw8tqer0KVSYOYYSPgkDO', 'librarian'),
+('Michael Chen', 'michael.c@library.com', '$2b$10$mrzUPJRVEgrqHOV4.LBhpeDEzfhtcwJ1Pw8tqer0KVSYOYYSPgkDO', 'librarian');
 
 -- Member users
 INSERT INTO users (name, email, password_hash, role) VALUES
-('John Smith', 'john.smith@email.com', '$2b$10$rKZM8qY3LX7vZ5YhF.WJUOxKXxNZ4J8FHlJ3h2KqVLWxGKqM1yZHi', 'member'),
-('Emily Davis', 'emily.davis@email.com', '$2b$10$rKZM8qY3LX7vZ5YhF.WJUOxKXxNZ4J8FHlJ3h2KqVLWxGKqM1yZHi', 'member'),
-('James Wilson', 'james.wilson@email.com', '$2b$10$rKZM8qY3LX7vZ5YhF.WJUOxKXxNZ4J8FHlJ3h2KqVLWxGKqM1yZHi', 'member'),
-('Sophia Martinez', 'sophia.m@email.com', '$2b$10$rKZM8qY3LX7vZ5YhF.WJUOxKXxNZ4J8FHlJ3h2KqVLWxGKqM1yZHi', 'member'),
-('Oliver Brown', 'oliver.b@email.com', '$2b$10$rKZM8qY3LX7vZ5YhF.WJUOxKXxNZ4J8FHlJ3h2KqVLWxGKqM1yZHi', 'member'),
-('Isabella Taylor', 'isabella.t@email.com', '$2b$10$rKZM8qY3LX7vZ5YhF.WJUOxKXxNZ4J8FHlJ3h2KqVLWxGKqM1yZHi', 'member'),
-('William Anderson', 'william.a@email.com', '$2b$10$rKZM8qY3LX7vZ5YhF.WJUOxKXxNZ4J8FHlJ3h2KqVLWxGKqM1yZHi', 'member'),
-('Emma Thomas', 'emma.thomas@email.com', '$2b$10$rKZM8qY3LX7vZ5YhF.WJUOxKXxNZ4J8FHlJ3h2KqVLWxGKqM1yZHi', 'member');
+('John Smith', 'john.smith@email.com', '$2b$10$mrzUPJRVEgrqHOV4.LBhpeDEzfhtcwJ1Pw8tqer0KVSYOYYSPgkDO', 'member'),
+('Emily Davis', 'emily.davis@email.com', '$2b$10$mrzUPJRVEgrqHOV4.LBhpeDEzfhtcwJ1Pw8tqer0KVSYOYYSPgkDO', 'member'),
+('James Wilson', 'james.wilson@email.com', '$2b$10$mrzUPJRVEgrqHOV4.LBhpeDEzfhtcwJ1Pw8tqer0KVSYOYYSPgkDO', 'member'),
+('Sophia Martinez', 'sophia.m@email.com', '$2b$10$mrzUPJRVEgrqHOV4.LBhpeDEzfhtcwJ1Pw8tqer0KVSYOYYSPgkDO', 'member'),
+('Oliver Brown', 'oliver.b@email.com', '$2b$10$mrzUPJRVEgrqHOV4.LBhpeDEzfhtcwJ1Pw8tqer0KVSYOYYSPgkDO', 'member'),
+('Isabella Taylor', 'isabella.t@email.com', '$2b$10$mrzUPJRVEgrqHOV4.LBhpeDEzfhtcwJ1Pw8tqer0KVSYOYYSPgkDO', 'member'),
+('William Anderson', 'william.a@email.com', '$2b$10$mrzUPJRVEgrqHOV4.LBhpeDEzfhtcwJ1Pw8tqer0KVSYOYYSPgkDO', 'member'),
+('Emma Thomas', 'emma.thomas@email.com', '$2b$10$mrzUPJRVEgrqHOV4.LBhpeDEzfhtcwJ1Pw8tqer0KVSYOYYSPgkDO', 'member');
 
 -- =====================================================
 -- SEED DATA: Categories

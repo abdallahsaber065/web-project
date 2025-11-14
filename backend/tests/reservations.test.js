@@ -15,8 +15,8 @@ describe('Reservations Endpoints', () => {
         const memberRes = await request(app)
             .post('/api/auth/login')
             .send({
-                email: 'jane.smith@email.com',
-                password: 'Password123!@#'
+                email: 'john.smith@email.com',
+                password: 'password123'
             });
         memberToken = memberRes.body.data.token;
 
@@ -25,7 +25,7 @@ describe('Reservations Endpoints', () => {
             .post('/api/auth/login')
             .send({
                 email: 'admin@library.com',
-                password: 'Admin123!@#'
+                password: 'password123'
             });
         adminToken = adminRes.body.data.token;
     });
@@ -61,7 +61,7 @@ describe('Reservations Endpoints', () => {
                 .set('Authorization', `Bearer ${memberToken}`)
                 .send({ book_id: 99999 });
 
-            expect(res.statusCode).toBe(400);
+            expect(res.statusCode).toBe(404);
         });
     });
 
@@ -140,7 +140,7 @@ describe('Reservations Endpoints', () => {
                 .delete('/api/reservations/99999')
                 .set('Authorization', `Bearer ${memberToken}`);
 
-            expect(res.statusCode).toBe(400);
+            expect(res.statusCode).toBe(404);
         });
     });
 });

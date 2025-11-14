@@ -304,7 +304,16 @@ const updateBook = async (req, res) => {
                  total_copies = COALESCE(?, total_copies),
                  available_copies = ?
              WHERE id = ?`,
-            [isbn, title, description, publisher, publication_year, total_copies, newAvailableCopies, id]
+            [
+                isbn !== undefined ? isbn : null,
+                title !== undefined ? title : null,
+                description !== undefined ? description : null,
+                publisher !== undefined ? publisher : null,
+                publication_year !== undefined ? publication_year : null,
+                total_copies !== undefined ? total_copies : null,
+                newAvailableCopies,
+                id
+            ]
         );
 
         // Update authors if provided

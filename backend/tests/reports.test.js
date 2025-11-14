@@ -15,7 +15,7 @@ describe('Reports Endpoints', () => {
             .post('/api/auth/login')
             .send({
                 email: 'admin@library.com',
-                password: 'Admin123!@#'
+                password: 'password123'
             });
         adminToken = adminRes.body.data.token;
 
@@ -23,8 +23,8 @@ describe('Reports Endpoints', () => {
         const memberRes = await request(app)
             .post('/api/auth/login')
             .send({
-                email: 'john.doe@email.com',
-                password: 'Password123!@#'
+                email: 'john.smith@email.com',
+                password: 'password123'
             });
         memberToken = memberRes.body.data.token;
     });

@@ -2,6 +2,30 @@
 
 All notable changes to the Library Management System project will be documented in this file.
 
+## [1.0.1] - 2024-01-21
+
+### Fixed
+
+- **Test Suite Corrections:**
+  - Fixed all automated test failures (59/59 tests now passing)
+  - Updated test credentials to use "password123" consistently
+  - Corrected book creation/update tests to use `author_ids` and `category_ids` instead of `authors` and `categories`
+  - Fixed book update test to expect correct response structure (message instead of data.title)
+  - Fixed authentication route test to use `/api/auth/me` instead of `/api/auth/profile`
+  - Corrected email addresses in test data to match seed data
+
+- **Backend Improvements:**
+  - Fixed bcrypt password hash in seed data (all users now use same hash for "password123")
+  - Modified `server.js` to skip server startup during tests (NODE_ENV=test check)
+  - Enhanced `authController.register` to return both token and user object (matching login response)
+  - Fixed `booksController.updateBook` to properly handle undefined values (convert to null for SQL)
+  - Added Jest setup file to set NODE_ENV=test globally
+
+- **Test Coverage:**
+  - Final coverage: 62.51% overall code coverage
+  - All 5 test suites passing (auth, books, loans, reservations, reports)
+  - 59 tests total covering all major API endpoints
+
 ## [1.0.0] - 2024-01-20
 
 ### Added - Complete Initial Implementation

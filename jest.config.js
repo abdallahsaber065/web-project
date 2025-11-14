@@ -13,5 +13,6 @@ module.exports = {
         '!backend/src/server.js'
     ],
     coverageDirectory: 'coverage',
-    coverageReporters: ['text', 'lcov', 'html']
+    coverageReporters: ['text', 'lcov', 'html'],
+    setupFiles: ['<rootDir>/jest.setup.js']
 };

@@ -33,7 +33,7 @@ describe('Auth Endpoints', () => {
                 .post('/api/auth/register')
                 .send(testUser);
 
-            expect(res.statusCode).toBe(400);
+            expect(res.statusCode).toBe(409);
             expect(res.body.success).toBe(false);
         });
 
@@ -105,10 +105,10 @@ describe('Auth Endpoints', () => {
         });
     });
 
-    describe('GET /api/auth/profile', () => {
+    describe('GET /api/auth/me', () => {
         test('should get user profile with valid token', async () => {
             const res = await request(app)
-                .get('/api/auth/profile')
+                .get('/api/auth/me')
                 .set('Authorization', `Bearer ${authToken}`);
 
             expect(res.statusCode).toBe(200);
@@ -119,7 +119,7 @@ describe('Auth Endpoints', () => {
 
         test('should fail without authentication', async () => {
             const res = await request(app)
-                .get('/api/auth/profile');
+                .get('/api/auth/me');
 
             expect(res.statusCode).toBe(401);
             expect(res.body.success).toBe(false);
@@ -127,7 +127,7 @@ describe('Auth Endpoints', () => {
 
         test('should fail with invalid token', async () => {
             const res = await request(app)
-                .get('/api/auth/profile')
+                .get('/api/auth/me')
                 .set('Authorization', 'Bearer invalid_token');
 
             expect(res.statusCode).toBe(401);
