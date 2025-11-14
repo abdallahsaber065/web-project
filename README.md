@@ -351,21 +351,6 @@ For issues or questions, please refer to:
 1. [Setup Guide](docs/setup.md)
 2. [API Documentation](docs/api.md)
 3. [Testing Guide](docs/tests.md)
-│   │   ├── middleware/     # Auth and validation middleware
-│   │   ├── routes/         # API routes
-│   │   └── server.js       # Application entry point
-│   └── tests/              # API tests
-├── frontend/
-│   ├── css/                # Stylesheets
-│   ├── js/                 # Client-side JavaScript
-│   ├── assets/             # Images and other assets
-│   └── *.html              # HTML pages
-├── db/
-│   ├── schema.sql          # Database schema
-│   └── seed.sql            # Sample data
-└── docs/                   # Documentation
-
-```
 
 ## Setup Instructions
 
