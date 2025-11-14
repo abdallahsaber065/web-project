@@ -84,7 +84,7 @@ const createLoanCard = (loan) => {
 
     let fineInfo = '';
     if (loan.fine_amount > 0) {
-        fineInfo = `<p><strong>Fine:</strong> <span style="color: var(--accent-color);">$${loan.fine_amount.toFixed(2)}</span></p>`;
+        fineInfo = `<p><strong>Fine:</strong> <span style="color: var(--accent-color);">$${Number(loan.fine_amount).toFixed(2)}</span></p>`;
     }
 
     let overdueInfo = '';

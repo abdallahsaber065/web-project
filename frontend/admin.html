@@ -25,24 +25,13 @@
         <div class="container">
             <!-- Tabs -->
             <div class="tabs">
-                <button class="tab-btn active" data-tab="statistics">Statistics</button>
-                <button class="tab-btn" data-tab="books">Manage Books</button>
+                <button class="tab-btn active" data-tab="books">Manage Books</button>
                 <button class="tab-btn" data-tab="loans">All Loans</button>
                 <button class="tab-btn" data-tab="users">Manage Users</button>
-                <button class="tab-btn" data-tab="reports">Reports</button>
-            </div>
-
-            <!-- Statistics Tab -->
-            <div id="statistics-tab" class="tab-content active">
-                <h3>Library Statistics</h3>
-                <div id="stats-loading" class="loading">Loading statistics...</div>
-                <div id="stats-grid" class="stats-grid">
-                    <!-- Statistics will be loaded here -->
-                </div>
             </div>
 
             <!-- Manage Books Tab -->
-            <div id="books-tab" class="tab-content">
+            <div id="books-tab" class="tab-content active">
                 <h3>Manage Books</h3>
                 <button id="add-book-btn" class="btn btn-primary">Add New Book</button>
                 <div id="books-loading" class="loading">Loading books...</div>
@@ -75,28 +64,6 @@
                 <div id="users-loading" class="loading">Loading users...</div>
                 <div id="users-table-container">
                     <!-- Users table will be loaded here -->
-                </div>
-            </div>
-
-            <!-- Reports Tab -->
-            <div id="reports-tab" class="tab-content">
-                <h3>Reports</h3>
-                <div class="reports-grid">
-                    <div class="report-card">
-                        <h4>Most Borrowed Books</h4>
-                        <button class="btn btn-primary" id="most-borrowed-btn">Generate</button>
-                        <div id="most-borrowed-result"></div>
-                    </div>
-                    <div class="report-card">
-                        <h4>Overdue Loans</h4>
-                        <button class="btn btn-primary" id="overdue-btn">Generate</button>
-                        <div id="overdue-result"></div>
-                    </div>
-                    <div class="report-card">
-                        <h4>Member Activity</h4>
-                        <button class="btn btn-primary" id="member-activity-btn">Generate</button>
-                        <div id="member-activity-result"></div>
-                    </div>
                 </div>
             </div>
         </div>

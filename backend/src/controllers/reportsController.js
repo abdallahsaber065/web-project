@@ -15,13 +15,28 @@ const getMostBorrowed = async (req, res) => {
 
     try {
         const [books] = await pool.execute(
-            'CALL sp_most_borrowed_books(?, ?)',
-            [parseInt(limit), parseInt(days)]
+            `SELECT 
+                b.id,
+                b.title,
+                b.isbn,
+                b.total_copies,
+                b.available_copies,
+                COUNT(l.id) AS borrow_count,
+                GROUP_CONCAT(DISTINCT a.name SEPARATOR ', ') AS authors
+            FROM books b
+            JOIN loans l ON b.id = l.book_id
+            LEFT JOIN book_authors ba ON b.id = ba.book_id
+            LEFT JOIN authors a ON ba.author_id = a.id
+            WHERE l.borrow_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+            GROUP BY b.id
+            ORDER BY borrow_count DESC
+            LIMIT ?`,
+            [parseInt(days), parseInt(limit)]
         );
 
         res.json({
             success: true,
-            data: books[0]
+            data: books
         });
     } catch (error) {
         throw error;

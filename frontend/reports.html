@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Library Management System</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/reports.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <!-- Will be populated by JavaScript -->
+    </nav>
+
+    <!-- Reports Container -->
+    <div class="reports-container">
+        <!-- Sidebar -->
+        <aside class="reports-sidebar">
+            <h3>📊 Reports</h3>
+            <nav class="sidebar-nav">
+                <button class="sidebar-link active" data-report="statistics">
+                    <span class="icon">📈</span>
+                    Library Statistics
+                </button>
+                <button class="sidebar-link" data-report="most-borrowed">
+                    <span class="icon">📚</span>
+                    Most Borrowed Books
+                </button>
+                <button class="sidebar-link" data-report="overdue">
+                    <span class="icon">⏰</span>
+                    Overdue Loans
+                </button>
+                <button class="sidebar-link" data-report="member-activity">
+                    <span class="icon">👥</span>
+                    Member Activity
+                </button>
+                <button class="sidebar-link" data-report="loans-by-date">
+                    <span class="icon">📅</span>
+                    Loans by Date
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="reports-main">
+            <div class="report-header">
+                <div>
+                    <h2 id="report-title">Library Statistics</h2>
+                    <p id="report-description">Overview of library operations and statistics</p>
+                </div>
+                <button id="print-btn" class="btn btn-secondary" onclick="window.print()">
+                    🖨️ Print Report
+                </button>
+            </div>
+
+            <!-- Loading -->
+            <div id="report-loading" class="loading" style="display: none;">
+                Loading report...
+            </div>
+
+            <!-- Error -->
+            <div id="report-error" class="alert alert-error" style="display: none;"></div>
+
+            <!-- Report Content -->
+            <div id="report-content" class="report-content">
+                <!-- Content will be loaded here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Library Management System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/js/main.js"></script>
+    <script src="/js/reports.js"></script>
+</body>
+</html>

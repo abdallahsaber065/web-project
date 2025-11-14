@@ -95,6 +95,10 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, '../../frontend/admin.html'));
 });
 
+app.get('/reports', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../frontend/reports.html'));
+});
+
 // =====================================================
 // ERROR HANDLING
 // =====================================================

@@ -131,6 +131,7 @@ const renderNavigation = (navId = 'navbar') => {
         if (user.role === 'admin' || user.role === 'librarian') {
             navHTML += `
                 <li><a href="/admin">Admin</a></li>
+                <li><a href="/reports">Reports</a></li>
             `;
         }
 

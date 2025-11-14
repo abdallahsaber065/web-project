@@ -36,59 +36,6 @@ tabs.forEach(tab => {
     });
 });
 
-// Load statistics
-const loadStatistics = async () => {
-    const loading = document.getElementById('stats-loading');
-    const statsGrid = document.getElementById('stats-grid');
-
-    loading.style.display = 'block';
-
-    try {
-        const data = await apiRequest('/reports/statistics');
-        const stats = data.data;
-
-        loading.style.display = 'none';
-
-        statsGrid.innerHTML = `
-            <div class="stat-item">
-                <h3>${stats.books.unique_titles}</h3>
-                <p>Unique Titles</p>
-            </div>
-            <div class="stat-item">
-                <h3>${stats.books.total_copies}</h3>
-                <p>Total Copies</p>
-            </div>
-            <div class="stat-item">
-                <h3>${stats.books.available_copies}</h3>
-                <p>Available Copies</p>
-            </div>
-            <div class="stat-item">
-                <h3>${stats.loans.active}</h3>
-                <p>Active Loans</p>
-            </div>
-            <div class="stat-item">
-                <h3>${stats.loans.overdue}</h3>
-                <p>Overdue Loans</p>
-            </div>
-            <div class="stat-item">
-                <h3>${stats.reservations.active}</h3>
-                <p>Active Reservations</p>
-            </div>
-            <div class="stat-item">
-                <h3>${stats.members.total}</h3>
-                <p>Total Members</p>
-            </div>
-            <div class="stat-item">
-                <h3>$${stats.fines.outstanding}</h3>
-                <p>Outstanding Fines</p>
-            </div>
-        `;
-    } catch (error) {
-        loading.style.display = 'none';
-        statsGrid.innerHTML = `<p class="alert alert-error">${error.message}</p>`;
-    }
-};
-
 // Load all books (for management)
 const loadAllBooks = async () => {
     const loading = document.getElementById('books-loading');
@@ -185,7 +132,7 @@ const loadAllLoans = async (status = '') => {
                     <td>${formatDate(loan.borrow_date)}</td>
                     <td>${formatDate(loan.due_date)}</td>
                     <td>${loan.status}</td>
-                    <td>$${loan.fine_amount.toFixed(2)}</td>
+                    <td>$${Number(loan.fine_amount || 0).toFixed(2)}</td>
                 </tr>
             `;
         });
@@ -299,64 +246,108 @@ document.getElementById('filter-loans-btn')?.addEventListener('click', () => {
     loadAllLoans(status);
 });
 
-// Report buttons
-document.getElementById('most-borrowed-btn')?.addEventListener('click', async () => {
-    try {
-        const data = await apiRequest('/reports/most-borrowed?limit=10');
-        const container = document.getElementById('most-borrowed-result');
-
-        let html = '<table><thead><tr><th>Title</th><th>Authors</th><th>Borrow Count</th></tr></thead><tbody>';
-        data.data.forEach(book => {
-            html += `<tr><td>${book.title}</td><td>${book.authors || 'N/A'}</td><td>${book.borrow_count}</td></tr>`;
-        });
-        html += '</tbody></table>';
-
-        container.innerHTML = html;
-    } catch (error) {
-        alert('Error: ' + error.message);
-    }
-});
-
-document.getElementById('overdue-btn')?.addEventListener('click', async () => {
-    try {
-        const data = await apiRequest('/reports/overdue');
-        const container = document.getElementById('overdue-result');
-
-        let html = '<table><thead><tr><th>User</th><th>Book</th><th>Days Overdue</th><th>Fine</th></tr></thead><tbody>';
-        data.data.forEach(loan => {
-            html += `<tr><td>${loan.user_name}</td><td>${loan.book_title}</td><td>${loan.days_overdue}</td><td>$${loan.calculated_fine.toFixed(2)}</td></tr>`;
-        });
-        html += '</tbody></table>';
-
-        container.innerHTML = html;
-    } catch (error) {
-        alert('Error: ' + error.message);
-    }
-});
-
-document.getElementById('member-activity-btn')?.addEventListener('click', async () => {
-    try {
-        const data = await apiRequest('/reports/member-activity');
-        const container = document.getElementById('member-activity-result');
-
-        let html = '<table><thead><tr><th>Name</th><th>Total Loans</th><th>Active</th><th>Overdue</th><th>Total Fines</th></tr></thead><tbody>';
-        data.data.forEach(member => {
-            html += `<tr><td>${member.name}</td><td>${member.total_loans}</td><td>${member.active_loans}</td><td>${member.overdue_loans}</td><td>$${(member.total_fines || 0).toFixed(2)}</td></tr>`;
-        });
-        html += '</tbody></table>';
-
-        container.innerHTML = html;
-    } catch (error) {
-        alert('Error: ' + error.message);
-    }
-});
-
-// Add book button (simplified - would need full form)
+// Add book button
 document.getElementById('add-book-btn')?.addEventListener('click', () => {
-    alert('Add book functionality would open a modal form. For demo, use API directly or implement full form.');
+    const modal = document.getElementById('book-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const form = document.getElementById('book-form');
+    
+    modalTitle.textContent = 'Add New Book';
+    form.reset();
+    form.dataset.mode = 'add';
+    delete form.dataset.bookId;
+    
+    modal.style.display = 'block';
+    modal.classList.add('active');
 });
 
-// Load statistics by default
+// Edit book function
+const editBook = async (bookId) => {
+    try {
+        const data = await apiRequest(`/books/${bookId}`);
+        const book = data.data;
+        
+        const modal = document.getElementById('book-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const form = document.getElementById('book-form');
+        
+        modalTitle.textContent = 'Edit Book';
+        form.dataset.mode = 'edit';
+        form.dataset.bookId = bookId;
+        
+        // Populate form fields
+        document.getElementById('book-title').value = book.title || '';
+        document.getElementById('book-isbn').value = book.isbn || '';
+        document.getElementById('book-publisher').value = book.publisher || '';
+        document.getElementById('book-year').value = book.publication_year || '';
+        document.getElementById('book-total-copies').value = book.total_copies || 1;
+        document.getElementById('book-available-copies').value = book.available_copies || 1;
+        document.getElementById('book-description').value = book.description || '';
+        
+        modal.style.display = 'block';
+        modal.classList.add('active');
+    } catch (error) {
+        alert('Error loading book: ' + error.message);
+    }
+};
+
+// Handle book form submission
+document.getElementById('book-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const form = e.target;
+    const mode = form.dataset.mode;
+    const bookId = form.dataset.bookId;
+    
+    const bookData = {
+        title: document.getElementById('book-title').value,
+        isbn: document.getElementById('book-isbn').value,
+        publisher: document.getElementById('book-publisher').value,
+        publication_year: parseInt(document.getElementById('book-year').value) || null,
+        total_copies: parseInt(document.getElementById('book-total-copies').value) || 1,
+        available_copies: parseInt(document.getElementById('book-available-copies').value) || 1,
+        description: document.getElementById('book-description').value
+    };
+    
+    try {
+        if (mode === 'add') {
+            await apiRequest('/books', {
+                method: 'POST',
+                body: JSON.stringify(bookData)
+            });
+            alert('Book added successfully!');
+        } else {
+            await apiRequest(`/books/${bookId}`, {
+                method: 'PUT',
+                body: JSON.stringify(bookData)
+            });
+            alert('Book updated successfully!');
+        }
+        
+        // Close modal and reload books
+        document.getElementById('book-modal').style.display = 'none';
+        document.getElementById('book-modal').classList.remove('active');
+        loadAllBooks();
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+});
+
+// Close modal handlers
+document.querySelector('.close')?.addEventListener('click', () => {
+    document.getElementById('book-modal').style.display = 'none';
+    document.getElementById('book-modal').classList.remove('active');
+});
+
+window.addEventListener('click', (e) => {
+    const modal = document.getElementById('book-modal');
+    if (e.target === modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+    }
+});
+
+// Load books by default
 document.addEventListener('DOMContentLoaded', () => {
-    loadStatistics();
+    loadAllBooks();
 });
