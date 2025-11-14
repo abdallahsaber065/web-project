@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Library Management System</title>
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>📚 Library</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/catalog">Catalog</a></li>
+                <li><a href="/login">Login</a></li>
+                <li><a href="/register" class="active">Register</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Register Form -->
+    <section class="auth-section">
+        <div class="container">
+            <div class="auth-container">
+                <h2>Create New Account</h2>
+                <form id="register-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" name="name" required placeholder="Enter your full name">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" required placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required 
+                               placeholder="Enter password (minimum 6 characters)" minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password">Confirm Password</label>
+                        <input type="password" id="confirm-password" name="confirm-password" required 
+                               placeholder="Re-enter your password">
+                    </div>
+                    <div class="alert" id="error-message" style="display: none;"></div>
+                    <div class="alert alert-success" id="success-message" style="display: none;"></div>
+                    <button type="submit" class="btn btn-primary btn-block">Register</button>
+                </form>
+                <p class="auth-switch">
+                    Already have an account? <a href="/login">Login here</a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Library Management System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/js/main.js"></script>
+    <script src="/js/auth.js"></script>
+</body>
+</html>

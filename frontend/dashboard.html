@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard - Library Management System</title>
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <!-- Will be populated by JavaScript -->
+    </nav>
+
+    <!-- Dashboard Header -->
+    <section class="dashboard-header">
+        <div class="container">
+            <h2>Welcome, <span id="user-name">User</span>!</h2>
+            <p>Manage your loans, reservations, and account</p>
+        </div>
+    </section>
+
+    <!-- Dashboard Content -->
+    <section class="dashboard-content">
+        <div class="container">
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="loans">My Loans</button>
+                <button class="tab-btn" data-tab="reservations">My Reservations</button>
+                <button class="tab-btn" data-tab="profile">Profile</button>
+            </div>
+
+            <!-- My Loans Tab -->
+            <div id="loans-tab" class="tab-content active">
+                <h3>My Loans</h3>
+                <div id="loans-loading" class="loading">Loading loans...</div>
+                <div id="loans-error" class="alert" style="display: none;"></div>
+                <div id="loans-list" class="loans-list">
+                    <!-- Loans will be loaded here -->
+                </div>
+            </div>
+
+            <!-- My Reservations Tab -->
+            <div id="reservations-tab" class="tab-content">
+                <h3>My Reservations</h3>
+                <div id="reservations-loading" class="loading">Loading reservations...</div>
+                <div id="reservations-error" class="alert" style="display: none;"></div>
+                <div id="reservations-list" class="reservations-list">
+                    <!-- Reservations will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div id="profile-tab" class="tab-content">
+                <h3>My Profile</h3>
+                <div id="profile-loading" class="loading">Loading profile...</div>
+                <div id="profile-error" class="alert" style="display: none;"></div>
+                <div id="profile-info" class="profile-info">
+                    <!-- Profile will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Library Management System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/js/main.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>

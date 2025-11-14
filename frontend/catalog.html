@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Catalog - Library Management System</title>
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <!-- Will be populated by JavaScript -->
+    </nav>
+
+    <!-- Search and Filters -->
+    <section class="search-section">
+        <div class="container">
+            <h2>Book Catalog</h2>
+            <div class="search-filters">
+                <input type="text" id="search-input" placeholder="Search by title, author, or ISBN..." class="search-input">
+                <select id="category-filter" class="filter-select">
+                    <option value="">All Categories</option>
+                </select>
+                <select id="availability-filter" class="filter-select">
+                    <option value="">All Books</option>
+                    <option value="true">Available Only</option>
+                    <option value="false">Unavailable Only</option>
+                </select>
+                <button id="search-btn" class="btn btn-primary">Search</button>
+                <button id="clear-btn" class="btn btn-secondary">Clear</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Books Grid -->
+    <section class="books-section">
+        <div class="container">
+            <div id="loading" class="loading">Loading books...</div>
+            <div id="error-message" class="alert" style="display: none;"></div>
+            <div id="books-grid" class="books-grid">
+                <!-- Books will be loaded here by JavaScript -->
+            </div>
+            
+            <!-- Pagination -->
+            <div id="pagination" class="pagination">
+                <!-- Pagination will be loaded here by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Book Details Modal -->
+    <div id="book-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="book-details">
+                <!-- Book details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Library Management System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/js/main.js"></script>
+    <script src="/js/catalog.js"></script>
+</body>
+</html>

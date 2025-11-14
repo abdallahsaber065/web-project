@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Library Management System</title>
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>📚 Library</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/">Home</a></li>
+                <li><a href="/catalog">Catalog</a></li>
+                <li><a href="/login" class="active">Login</a></li>
+                <li><a href="/register">Register</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Login Form -->
+    <section class="auth-section">
+        <div class="container">
+            <div class="auth-container">
+                <h2>Login to Your Account</h2>
+                <form id="login-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" required placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    </div>
+                    <div class="alert" id="error-message" style="display: none;"></div>
+                    <button type="submit" class="btn btn-primary btn-block">Login</button>
+                </form>
+                <p class="auth-switch">
+                    Don't have an account? <a href="/register">Register here</a>
+                </p>
+                
+                <!-- Demo Credentials -->
+                <div class="demo-credentials">
+                    <h4>Demo Credentials</h4>
+                    <p><strong>Admin:</strong> admin@library.com / password123</p>
+                    <p><strong>Librarian:</strong> sarah.j@library.com / password123</p>
+                    <p><strong>Member:</strong> john.smith@email.com / password123</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Library Management System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/js/main.js"></script>
+    <script src="/js/auth.js"></script>
+</body>
+</html>
