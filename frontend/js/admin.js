@@ -251,12 +251,12 @@ document.getElementById('add-book-btn')?.addEventListener('click', () => {
     const modal = document.getElementById('book-modal');
     const modalTitle = document.getElementById('modal-title');
     const form = document.getElementById('book-form');
-    
+
     modalTitle.textContent = 'Add New Book';
     form.reset();
     form.dataset.mode = 'add';
     delete form.dataset.bookId;
-    
+
     modal.style.display = 'block';
     modal.classList.add('active');
 });
@@ -266,24 +266,32 @@ const editBook = async (bookId) => {
     try {
         const data = await apiRequest(`/books/${bookId}`);
         const book = data.data;
-        
+
         const modal = document.getElementById('book-modal');
         const modalTitle = document.getElementById('modal-title');
         const form = document.getElementById('book-form');
-        
+
         modalTitle.textContent = 'Edit Book';
         form.dataset.mode = 'edit';
         form.dataset.bookId = bookId;
-        
+
         // Populate form fields
         document.getElementById('book-title').value = book.title || '';
         document.getElementById('book-isbn').value = book.isbn || '';
         document.getElementById('book-publisher').value = book.publisher || '';
         document.getElementById('book-year').value = book.publication_year || '';
-        document.getElementById('book-total-copies').value = book.total_copies || 1;
+        document.getElementById('book-copies').value = book.total_copies || 1;
         document.getElementById('book-available-copies').value = book.available_copies || 1;
         document.getElementById('book-description').value = book.description || '';
-        
+
+        // Convert authors array to comma-separated string
+        const authorNames = book.authors ? book.authors.map(a => a.name).join(', ') : '';
+        document.getElementById('book-authors').value = authorNames;
+
+        // Convert categories array to comma-separated string
+        const categoryNames = book.categories ? book.categories.map(c => c.name).join(', ') : '';
+        document.getElementById('book-categories').value = categoryNames;
+
         modal.style.display = 'block';
         modal.classList.add('active');
     } catch (error) {
@@ -294,21 +302,23 @@ const editBook = async (bookId) => {
 // Handle book form submission
 document.getElementById('book-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const form = e.target;
     const mode = form.dataset.mode;
     const bookId = form.dataset.bookId;
-    
+
     const bookData = {
         title: document.getElementById('book-title').value,
         isbn: document.getElementById('book-isbn').value,
         publisher: document.getElementById('book-publisher').value,
         publication_year: parseInt(document.getElementById('book-year').value) || null,
-        total_copies: parseInt(document.getElementById('book-total-copies').value) || 1,
+        total_copies: parseInt(document.getElementById('book-copies').value) || 1,
         available_copies: parseInt(document.getElementById('book-available-copies').value) || 1,
-        description: document.getElementById('book-description').value
+        description: document.getElementById('book-description').value,
+        author_names: document.getElementById('book-authors').value,
+        category_names: document.getElementById('book-categories').value
     };
-    
+
     try {
         if (mode === 'add') {
             await apiRequest('/books', {
@@ -323,7 +333,7 @@ document.getElementById('book-form')?.addEventListener('submit', async (e) => {
             });
             alert('Book updated successfully!');
         }
-        
+
         // Close modal and reload books
         document.getElementById('book-modal').style.display = 'none';
         document.getElementById('book-modal').classList.remove('active');

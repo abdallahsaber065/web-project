@@ -11,16 +11,16 @@ const initSidebarNavigation = () => {
     console.log('Initializing sidebar navigation...');
     const links = document.querySelectorAll('.sidebar-link');
     console.log('Found sidebar links:', links.length);
-    
+
     links.forEach(link => {
-        link.addEventListener('click', function() {
+        link.addEventListener('click', function () {
             const reportType = this.dataset.report;
             console.log('Clicked report:', reportType);
-            
+
             // Update active state
             document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
             this.classList.add('active');
-            
+
             // Load report
             loadReport(reportType);
         });
@@ -33,20 +33,20 @@ const loadReport = async (reportType) => {
     console.log('Loading report:', reportType);
     currentReport = reportType;
     const config = reportConfigs[reportType];
-    
+
     if (!config) {
         console.error('Report config not found for:', reportType);
         return;
     }
-    
+
     // Update header
     document.getElementById('report-title').textContent = config.title;
     document.getElementById('report-description').textContent = config.description;
-    
+
     // Clear content
     document.getElementById('report-content').innerHTML = '';
     document.getElementById('report-error').style.display = 'none';
-    
+
     // Load report
     await config.loader();
 };
@@ -120,7 +120,7 @@ const loadMostBorrowedReport = async () => {
 
     try {
         const data = await apiRequest('/reports/most-borrowed');
-        
+
         loading.style.display = 'none';
 
         let tableHTML = `
@@ -176,7 +176,7 @@ const loadOverdueReport = async () => {
 
     try {
         const data = await apiRequest('/reports/overdue');
-        
+
         loading.style.display = 'none';
 
         let tableHTML = `
@@ -232,7 +232,7 @@ const loadMemberActivityReport = async () => {
 
     try {
         const data = await apiRequest('/reports/member-activity');
-        
+
         loading.style.display = 'none';
 
         let tableHTML = `
@@ -320,7 +320,7 @@ const loadLoansByDateReport = async () => {
 
         try {
             const data = await apiRequest(`/reports/loans-by-date?start_date=${startDate}&end_date=${endDate}`);
-            
+
             loading.style.display = 'none';
 
             let tableHTML = `
@@ -410,11 +410,11 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '/dashboard';
         return;
     }
-    
+
     console.log('Initializing reports page...');
     initSidebarNavigation();
     loadReport('statistics').catch(err => console.error('Error loading initial report:', err));
-    
+
     // Set print date for print header
     document.querySelector('.report-header').setAttribute('data-print-date', new Date().toLocaleDateString());
 });
