@@ -126,31 +126,38 @@ web/
    git clone <repository-url>
    cd web
    ```
+
 2. **Install dependencies**
 
    ```bash
    npm install
    ```
+
 3. **Set up the database**
 
    ```bash
    # Create database user and database
-   psql -U postgres -c "CREATE USER library_management WITH PASSWORD 'library_management_password';"
-   psql -U postgres -c "CREATE DATABASE library_management OWNER library_management;"
-   psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE library_management TO library_management;"
+   psql -U postgres # and enter password
+   CREATE USER library_management WITH PASSWORD 'library_management_password';
+   CREATE DATABASE library_management OWNER library_management;
+   GRANT ALL PRIVILEGES ON DATABASE library_management TO library_management;
+   \q
 
    # Run schema
-   psql -U library_management -d library_management -f db/schema.sql
+   psql -U library_management -d library_management -f db/schema.sql # and enter password
+   \q
 
    # Load sample data (optional)
-   psql -U library_management -d library_management -f db/seed.sql
+   psql -U library_management -d library_management -f db/seed.sql # and enter password
    ```
+
 4. **Configure environment**
 
    ```bash
    cp .env.example .env
    # Edit .env with your database credentials and JWT secret
    ```
+
 5. **Run the application**
 
    ```bash
@@ -160,6 +167,7 @@ web/
    # Production mode
    npm start
    ```
+
 6. **Access the application**
 
    - Frontend: [http://localhost:3000](http://localhost:3000)
