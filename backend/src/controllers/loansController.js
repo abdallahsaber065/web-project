@@ -39,8 +39,8 @@ const borrowBook = async (req, res) => {
             data: loanResult.rows[0]
         });
     } catch (error) {
-        // Handle stored function errors
-        if (error.message) {
+        // Handle PostgreSQL stored function errors (RAISE EXCEPTION uses code P0001)
+        if (error.code === 'P0001') {
             return res.status(400).json({
                 success: false,
                 message: error.message
@@ -76,7 +76,8 @@ const returnBook = async (req, res) => {
             }
         });
     } catch (error) {
-        if (error.message) {
+        // Handle PostgreSQL stored function errors (RAISE EXCEPTION uses code P0001)
+        if (error.code === 'P0001') {
             return res.status(400).json({
                 success: false,
                 message: error.message
