@@ -1,0 +1,15 @@
+# Netlify Build Configuration
+
+[build]
+  # Publish directory (frontend static files)
+  publish = "frontend"
+  
+  # No build command needed - serving static frontend files
+  # Backend runs as Netlify Functions
+
+[build.environment]
+  # Tell Netlify's secrets scanner to ignore these non-sensitive env vars
+  # These are flagged because their example values (like "3000", "production", "0.50")
+  # appear in documentation and config files as defaults/examples
+  SECRETS_SCAN_OMIT_KEYS = "NODE_ENV,PORT,FINE_PER_DAY"
+
