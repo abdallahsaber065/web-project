@@ -1,13 +1,7 @@
-/**
- * Multi-Select Autocomplete Styles
- */
-
-/* ====================MULTI-SELECT AUTOCOMPLETE ==================== */
-
-.multi-select-container {
-  position: relative;
-  margin-bottom: var(--spacing-md);
-}
+ 
+ 
+ 
+ 
 
 .multi-select-tags {
   display: flex;

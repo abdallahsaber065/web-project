@@ -1,7 +1,3 @@
-/**
- * Catalog Page - Book browsing and search
- */
-
 let currentPage = 1;
 let currentFilters = {
     search: '',
@@ -9,7 +5,6 @@ let currentFilters = {
     available: ''
 };
 
-// Load categories for filter
 const loadCategories = async () => {
     try {
         const data = await apiRequest('/categories');
@@ -26,7 +21,6 @@ const loadCategories = async () => {
     }
 };
 
-// Load books with pagination and filters
 const loadBooks = async (page = 1) => {
     const loading = document.getElementById('loading');
     const booksGrid = document.getElementById('books-grid');
@@ -52,13 +46,11 @@ const loadBooks = async (page = 1) => {
             return;
         }
 
-        // Render books
         data.data.books.forEach(book => {
             const bookCard = createBookCard(book);
             booksGrid.appendChild(bookCard);
         });
 
-        // Render pagination
         renderPagination(data.data.pagination);
 
     } catch (error) {
@@ -67,7 +59,6 @@ const loadBooks = async (page = 1) => {
     }
 };
 
-// Create book card element
 const createBookCard = (book) => {
     const card = document.createElement('div');
     card.className = 'book-card';
@@ -91,7 +82,6 @@ const createBookCard = (book) => {
     return card;
 };
 
-// View book details
 const viewBookDetails = async (bookId) => {
     const modal = document.getElementById('book-modal');
     const detailsContainer = document.getElementById('book-details');
@@ -140,7 +130,6 @@ const viewBookDetails = async (bookId) => {
     }
 };
 
-// Borrow book
 const borrowBook = async (bookId) => {
     try {
         const data = await apiRequest('/loans', {
@@ -158,7 +147,6 @@ const borrowBook = async (bookId) => {
     }
 };
 
-// Reserve book
 const reserveBook = async (bookId) => {
     try {
         const data = await apiRequest('/reservations', {
@@ -176,14 +164,12 @@ const reserveBook = async (bookId) => {
     }
 };
 
-// Render pagination
 const renderPagination = (pagination) => {
     const container = document.getElementById('pagination');
     container.innerHTML = '';
 
     const { page, totalPages } = pagination;
 
-    // Previous button
     const prevBtn = document.createElement('button');
     prevBtn.textContent = '← Previous';
     prevBtn.disabled = page === 1;
@@ -193,7 +179,6 @@ const renderPagination = (pagination) => {
     };
     container.appendChild(prevBtn);
 
-    // Page numbers
     for (let i = 1; i <= totalPages; i++) {
         if (i === 1 || i === totalPages || (i >= page - 2 && i <= page + 2)) {
             const pageBtn = document.createElement('button');
@@ -212,7 +197,6 @@ const renderPagination = (pagination) => {
         }
     }
 
-    // Next button
     const nextBtn = document.createElement('button');
     nextBtn.textContent = 'Next →';
     nextBtn.disabled = page === totalPages;
@@ -223,14 +207,12 @@ const renderPagination = (pagination) => {
     container.appendChild(nextBtn);
 };
 
-// Close modal
 document.querySelector('.close')?.addEventListener('click', () => {
     const modal = document.getElementById('book-modal');
     modal.style.display = 'none';
     modal.classList.remove('active');
 });
 
-// Close modal on outside click
 window.addEventListener('click', (e) => {
     const modal = document.getElementById('book-modal');
     if (e.target === modal) {
@@ -239,7 +221,6 @@ window.addEventListener('click', (e) => {
     }
 });
 
-// Search button
 document.getElementById('search-btn')?.addEventListener('click', () => {
     currentFilters.search = document.getElementById('search-input').value;
     currentFilters.category = document.getElementById('category-filter').value;
@@ -248,7 +229,6 @@ document.getElementById('search-btn')?.addEventListener('click', () => {
     loadBooks(currentPage);
 });
 
-// Clear filters button
 document.getElementById('clear-btn')?.addEventListener('click', () => {
     document.getElementById('search-input').value = '';
     document.getElementById('category-filter').value = '';
@@ -258,7 +238,6 @@ document.getElementById('clear-btn')?.addEventListener('click', () => {
     loadBooks(currentPage);
 });
 
-// Load on page load
 document.addEventListener('DOMContentLoaded', () => {
     loadCategories();
     loadBooks(1);

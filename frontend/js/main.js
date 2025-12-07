@@ -1,41 +1,29 @@
-/**
- * Main JavaScript - Common utilities and functions
- */
-
-// API base URL
 const API_URL = '/api';
 
-// Get token from localStorage
 const getToken = () => localStorage.getItem('token');
 
-// Get user from localStorage
 const getUser = () => {
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
 };
 
-// Set auth data
 const setAuth = (token, user) => {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
 };
 
-// Clear auth data
 const clearAuth = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
 };
 
-// Check if user is authenticated
 const isAuthenticated = () => !!getToken();
 
-// Logout function
 const logout = () => {
     clearAuth();
-    window.location.href = '/login';
+    window.location.href = './login.html';
 };
 
-// API request helper
 const apiRequest = async (endpoint, options = {}) => {
     const token = getToken();
 
@@ -55,10 +43,9 @@ const apiRequest = async (endpoint, options = {}) => {
         const response = await fetch(`${API_URL}${endpoint}`, config);
         const data = await response.json();
 
-        // Handle unauthorized
         if (response.status === 401) {
             clearAuth();
-            window.location.href = '/login';
+            window.location.href = './login.html';
             throw new Error('Session expired. Please login again.');
         }
 
@@ -72,7 +59,6 @@ const apiRequest = async (endpoint, options = {}) => {
     }
 };
 
-// Show error message
 const showError = (elementId, message) => {
     const element = document.getElementById(elementId);
     if (element) {
@@ -82,7 +68,6 @@ const showError = (elementId, message) => {
     }
 };
 
-// Show success message
 const showSuccess = (elementId, message) => {
     const element = document.getElementById(elementId);
     if (element) {
@@ -92,7 +77,6 @@ const showSuccess = (elementId, message) => {
     }
 };
 
-// Hide message
 const hideMessage = (elementId) => {
     const element = document.getElementById(elementId);
     if (element) {
@@ -100,11 +84,9 @@ const hideMessage = (elementId) => {
     }
 };
 
-// Format date
 const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     let date;
-    // If format is YYYY-MM-DD (SQL DATE), append a time to ensure consistent parsing
     if (/^\d{4}-\d{2}-\d{2}$/.test(String(dateString))) {
         date = new Date(`${dateString}T00:00:00`);
     } else {
@@ -112,14 +94,12 @@ const formatDate = (dateString) => {
     }
 
     if (isNaN(date)) {
-        // fallback to original string if parsing failed
         return String(dateString);
     }
 
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-// Render navigation based on auth status
 const renderNavigation = (navId = 'navbar') => {
     const navbar = document.getElementById(navId);
     if (!navbar) return;
@@ -132,19 +112,19 @@ const renderNavigation = (navId = 'navbar') => {
                 <h1>📚 Library</h1>
             </div>
             <ul class="nav-menu">
-                <li><a href="/">Home</a></li>
-                <li><a href="/catalog">Catalog</a></li>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="catalog.html">Catalog</a></li>
     `;
 
     if (user) {
         navHTML += `
-                <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
         `;
 
         if (user.role === 'admin' || user.role === 'librarian') {
             navHTML += `
-                <li><a href="/admin">Admin</a></li>
-                <li><a href="/reports">Reports</a></li>
+                <li><a href="admin.html">Admin</a></li>
+                <li><a href="reports.html">Reports</a></li>
             `;
         }
 
@@ -157,8 +137,8 @@ const renderNavigation = (navId = 'navbar') => {
         `;
     } else {
         navHTML += `
-                <li><a href="/login">Login</a></li>
-                <li><a href="/register">Register</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="register.html">Register</a></li>
             </ul>
         `;
     }
@@ -167,25 +147,23 @@ const renderNavigation = (navId = 'navbar') => {
     navbar.innerHTML = navHTML;
 };
 
-// Check authentication and redirect if needed
 const requireAuth = (requiredRole = null) => {
     const user = getUser();
 
     if (!user) {
-        window.location.href = '/login';
+        window.location.href = 'login.html';
         return false;
     }
 
     if (requiredRole && user.role !== requiredRole && user.role !== 'admin') {
         alert('You do not have permission to access this page.');
-        window.location.href = '/dashboard';
+        window.location.href = './dashboard.html';
         return false;
     }
 
     return true;
 };
 
-// Initialize navigation on page load
 document.addEventListener('DOMContentLoaded', () => {
     renderNavigation();
 });
