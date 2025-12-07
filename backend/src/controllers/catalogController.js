@@ -14,13 +14,13 @@ const { pool } = require('../config/database');
  */
 const getAuthors = async (req, res) => {
     try {
-        const [authors] = await pool.execute(
+        const result = await pool.query(
             'SELECT id, name, biography, created_at FROM authors ORDER BY name'
         );
 
         res.json({
             success: true,
-            data: authors
+            data: result.rows
         });
     } catch (error) {
         throw error;
@@ -35,12 +35,12 @@ const getAuthorById = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const [authors] = await pool.execute(
-            'SELECT id, name, biography, created_at FROM authors WHERE id = ?',
+        const authorsResult = await pool.query(
+            'SELECT id, name, biography, created_at FROM authors WHERE id = $1',
             [id]
         );
 
-        if (authors.length === 0) {
+        if (authorsResult.rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Author not found'
@@ -48,19 +48,19 @@ const getAuthorById = async (req, res) => {
         }
 
         // Get books by this author
-        const [books] = await pool.execute(
+        const booksResult = await pool.query(
             `SELECT b.id, b.title, b.isbn
              FROM books b
              JOIN book_authors ba ON b.id = ba.book_id
-             WHERE ba.author_id = ?`,
+             WHERE ba.author_id = $1`,
             [id]
         );
 
         res.json({
             success: true,
             data: {
-                ...authors[0],
-                books
+                ...authorsResult.rows[0],
+                books: booksResult.rows
             }
         });
     } catch (error) {
@@ -76,15 +76,15 @@ const createAuthor = async (req, res) => {
     const { name, biography } = req.body;
 
     try {
-        const [result] = await pool.execute(
-            'INSERT INTO authors (name, biography) VALUES (?, ?)',
+        const result = await pool.query(
+            'INSERT INTO authors (name, biography) VALUES ($1, $2) RETURNING id',
             [name, biography || null]
         );
 
         res.status(201).json({
             success: true,
             message: 'Author created successfully',
-            data: { id: result.insertId }
+            data: { id: result.rows[0].id }
         });
     } catch (error) {
         throw error;
@@ -100,12 +100,12 @@ const updateAuthor = async (req, res) => {
     const { name, biography } = req.body;
 
     try {
-        const [result] = await pool.execute(
-            'UPDATE authors SET name = COALESCE(?, name), biography = COALESCE(?, biography) WHERE id = ?',
+        const result = await pool.query(
+            'UPDATE authors SET name = COALESCE($1, name), biography = COALESCE($2, biography) WHERE id = $3',
             [name, biography, id]
         );
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Author not found'
@@ -129,9 +129,9 @@ const deleteAuthor = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const [result] = await pool.execute('DELETE FROM authors WHERE id = ?', [id]);
+        const result = await pool.query('DELETE FROM authors WHERE id = $1', [id]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Author not found'
@@ -155,13 +155,13 @@ const deleteAuthor = async (req, res) => {
  */
 const getCategories = async (req, res) => {
     try {
-        const [categories] = await pool.execute(
+        const result = await pool.query(
             'SELECT id, name, description FROM categories ORDER BY name'
         );
 
         res.json({
             success: true,
-            data: categories
+            data: result.rows
         });
     } catch (error) {
         throw error;
@@ -176,12 +176,12 @@ const getCategoryById = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const [categories] = await pool.execute(
-            'SELECT id, name, description FROM categories WHERE id = ?',
+        const result = await pool.query(
+            'SELECT id, name, description FROM categories WHERE id = $1',
             [id]
         );
 
-        if (categories.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Category not found'
@@ -190,7 +190,7 @@ const getCategoryById = async (req, res) => {
 
         res.json({
             success: true,
-            data: categories[0]
+            data: result.rows[0]
         });
     } catch (error) {
         throw error;
@@ -205,15 +205,15 @@ const createCategory = async (req, res) => {
     const { name, description } = req.body;
 
     try {
-        const [result] = await pool.execute(
-            'INSERT INTO categories (name, description) VALUES (?, ?)',
+        const result = await pool.query(
+            'INSERT INTO categories (name, description) VALUES ($1, $2) RETURNING id',
             [name, description || null]
         );
 
         res.status(201).json({
             success: true,
             message: 'Category created successfully',
-            data: { id: result.insertId }
+            data: { id: result.rows[0].id }
         });
     } catch (error) {
         throw error;
@@ -229,12 +229,12 @@ const updateCategory = async (req, res) => {
     const { name, description } = req.body;
 
     try {
-        const [result] = await pool.execute(
-            'UPDATE categories SET name = COALESCE(?, name), description = COALESCE(?, description) WHERE id = ?',
+        const result = await pool.query(
+            'UPDATE categories SET name = COALESCE($1, name), description = COALESCE($2, description) WHERE id = $3',
             [name, description, id]
         );
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Category not found'
@@ -258,9 +258,9 @@ const deleteCategory = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const [result] = await pool.execute('DELETE FROM categories WHERE id = ?', [id]);
+        const result = await pool.query('DELETE FROM categories WHERE id = $1', [id]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Category not found'

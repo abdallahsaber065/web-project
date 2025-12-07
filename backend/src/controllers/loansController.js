@@ -16,34 +16,34 @@ const borrowBook = async (req, res) => {
     const user_id = req.user.id;
 
     try {
-        // Call stored procedure to borrow book
-        const [result] = await pool.execute(
-            'CALL sp_borrow_book(?, ?, ?)',
+        // Call stored function to borrow book
+        const result = await pool.query(
+            'SELECT * FROM sp_borrow_book($1, $2, $3)',
             [user_id, book_id, config.library.loanDurationDays]
         );
 
-        const loanId = result[0][0].loan_id;
+        const loanId = result.rows[0].loan_id;
 
         // Get loan details
-        const [loans] = await pool.execute(
+        const loanResult = await pool.query(
             `SELECT l.*, b.title AS book_title, b.isbn
              FROM loans l
              JOIN books b ON l.book_id = b.id
-             WHERE l.id = ?`,
+             WHERE l.id = $1`,
             [loanId]
         );
 
         res.status(201).json({
             success: true,
             message: 'Book borrowed successfully',
-            data: loans[0]
+            data: loanResult.rows[0]
         });
     } catch (error) {
-        // Handle stored procedure errors
-        if (error.sqlMessage) {
+        // Handle stored function errors
+        if (error.message) {
             return res.status(400).json({
                 success: false,
-                message: error.sqlMessage
+                message: error.message
             });
         }
         throw error;
@@ -58,13 +58,13 @@ const returnBook = async (req, res) => {
     const { id } = req.params;
 
     try {
-        // Call stored procedure to return book
-        const [result] = await pool.execute(
-            'CALL sp_return_book(?, ?)',
+        // Call stored function to return book
+        const result = await pool.query(
+            'SELECT * FROM sp_return_book($1, $2)',
             [id, config.library.finePerDay]
         );
 
-        const { fine_amount, days_late } = result[0][0];
+        const { fine_amount, days_late } = result.rows[0];
 
         res.json({
             success: true,
@@ -76,10 +76,10 @@ const returnBook = async (req, res) => {
             }
         });
     } catch (error) {
-        if (error.sqlMessage) {
+        if (error.message) {
             return res.status(400).json({
                 success: false,
-                message: error.sqlMessage
+                message: error.message
             });
         }
         throw error;
@@ -106,26 +106,28 @@ const getMyLoans = async (req, res) => {
                 l.return_date,
                 l.status,
                 l.fine_amount,
-                DATEDIFF(CURDATE(), l.due_date) AS days_overdue
+                GREATEST(0, CURRENT_DATE - l.due_date) AS days_overdue
             FROM loans l
             JOIN books b ON l.book_id = b.id
-            WHERE l.user_id = ?
+            WHERE l.user_id = $1
         `;
 
         const params = [user_id];
+        let paramIndex = 2;
 
         if (status) {
-            query += ' AND l.status = ?';
+            query += ` AND l.status = $${paramIndex}`;
             params.push(status);
+            paramIndex++;
         }
 
         query += ' ORDER BY l.borrow_date DESC';
 
-        const [loans] = await pool.execute(query, params);
+        const result = await pool.query(query, params);
 
         res.json({
             success: true,
-            data: loans
+            data: result.rows
         });
     } catch (error) {
         throw error;
@@ -154,7 +156,7 @@ const getAllLoans = async (req, res) => {
                 l.return_date,
                 l.status,
                 l.fine_amount,
-                DATEDIFF(CURDATE(), l.due_date) AS days_overdue
+                GREATEST(0, CURRENT_DATE - l.due_date) AS days_overdue
             FROM loans l
             JOIN users u ON l.user_id = u.id
             JOIN books b ON l.book_id = b.id
@@ -162,28 +164,31 @@ const getAllLoans = async (req, res) => {
         `;
 
         const params = [];
+        let paramIndex = 1;
 
         if (status) {
-            query += ' AND l.status = ?';
+            query += ` AND l.status = $${paramIndex}`;
             params.push(status);
+            paramIndex++;
         }
 
         if (user_id) {
-            query += ' AND l.user_id = ?';
+            query += ` AND l.user_id = $${paramIndex}`;
             params.push(user_id);
+            paramIndex++;
         }
 
         if (overdue === 'true') {
-            query += ' AND l.return_date IS NULL AND l.due_date < CURDATE()';
+            query += ' AND l.return_date IS NULL AND l.due_date < CURRENT_DATE';
         }
 
         query += ' ORDER BY l.borrow_date DESC';
 
-        const [loans] = await pool.execute(query, params);
+        const result = await pool.query(query, params);
 
         res.json({
             success: true,
-            data: loans
+            data: result.rows
         });
     } catch (error) {
         throw error;
@@ -214,24 +219,25 @@ const getLoanById = async (req, res) => {
                 l.return_date,
                 l.status,
                 l.fine_amount,
-                DATEDIFF(CURDATE(), l.due_date) AS days_overdue
+                GREATEST(0, CURRENT_DATE - l.due_date) AS days_overdue
             FROM loans l
             JOIN users u ON l.user_id = u.id
             JOIN books b ON l.book_id = b.id
-            WHERE l.id = ?
+            WHERE l.id = $1
         `;
 
         const params = [id];
+        let paramIndex = 2;
 
         // Members can only see their own loans
         if (user_role === 'member') {
-            query += ' AND l.user_id = ?';
+            query += ` AND l.user_id = $${paramIndex}`;
             params.push(user_id);
         }
 
-        const [loans] = await pool.execute(query, params);
+        const result = await pool.query(query, params);
 
-        if (loans.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Loan not found'
@@ -240,7 +246,7 @@ const getLoanById = async (req, res) => {
 
         res.json({
             success: true,
-            data: loans[0]
+            data: result.rows[0]
         });
     } catch (error) {
         throw error;

@@ -14,7 +14,7 @@ const getMostBorrowed = async (req, res) => {
     const { limit = 10, days = 30 } = req.query;
 
     try {
-        const [books] = await pool.execute(
+        const result = await pool.query(
             `SELECT 
                 b.id,
                 b.title,
@@ -22,21 +22,21 @@ const getMostBorrowed = async (req, res) => {
                 b.total_copies,
                 b.available_copies,
                 COUNT(l.id) AS borrow_count,
-                GROUP_CONCAT(DISTINCT a.name SEPARATOR ', ') AS authors
+                STRING_AGG(DISTINCT a.name, ', ') AS authors
             FROM books b
             JOIN loans l ON b.id = l.book_id
             LEFT JOIN book_authors ba ON b.id = ba.book_id
             LEFT JOIN authors a ON ba.author_id = a.id
-            WHERE l.borrow_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+            WHERE l.borrow_date >= CURRENT_DATE - $1::INTEGER
             GROUP BY b.id
             ORDER BY borrow_count DESC
-            LIMIT ?`,
+            LIMIT $2`,
             [parseInt(days), parseInt(limit)]
         );
 
         res.json({
             success: true,
-            data: books
+            data: result.rows
         });
     } catch (error) {
         throw error;
@@ -49,7 +49,7 @@ const getMostBorrowed = async (req, res) => {
  */
 const getOverdueLoans = async (req, res) => {
     try {
-        const [loans] = await pool.execute(
+        const result = await pool.query(
             `SELECT 
                 l.id,
                 l.user_id,
@@ -59,19 +59,19 @@ const getOverdueLoans = async (req, res) => {
                 b.title AS book_title,
                 l.borrow_date,
                 l.due_date,
-                DATEDIFF(CURDATE(), l.due_date) AS days_overdue,
-                (DATEDIFF(CURDATE(), l.due_date) * ?) AS calculated_fine
+                GREATEST(0, CURRENT_DATE - l.due_date) AS days_overdue,
+                (GREATEST(0, CURRENT_DATE - l.due_date) * $1) AS calculated_fine
             FROM loans l
             JOIN users u ON l.user_id = u.id
             JOIN books b ON l.book_id = b.id
-            WHERE l.return_date IS NULL AND l.due_date < CURDATE()
+            WHERE l.return_date IS NULL AND l.due_date < CURRENT_DATE
             ORDER BY days_overdue DESC`,
             [0.50] // Fine per day
         );
 
         res.json({
             success: true,
-            data: loans
+            data: result.rows
         });
     } catch (error) {
         throw error;
@@ -86,7 +86,7 @@ const getMemberActivity = async (req, res) => {
     const { days = 30 } = req.query;
 
     try {
-        const [members] = await pool.execute(
+        const result = await pool.query(
             `SELECT 
                 u.id,
                 u.name,
@@ -96,7 +96,7 @@ const getMemberActivity = async (req, res) => {
                 SUM(CASE WHEN l.status = 'overdue' THEN 1 ELSE 0 END) AS overdue_loans,
                 SUM(l.fine_amount) AS total_fines
             FROM users u
-            LEFT JOIN loans l ON u.id = l.user_id AND l.borrow_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+            LEFT JOIN loans l ON u.id = l.user_id AND l.borrow_date >= CURRENT_DATE - $1::INTEGER
             WHERE u.role = 'member'
             GROUP BY u.id
             ORDER BY total_loans DESC`,
@@ -105,7 +105,7 @@ const getMemberActivity = async (req, res) => {
 
         res.json({
             success: true,
-            data: members
+            data: result.rows
         });
     } catch (error) {
         throw error;
@@ -119,47 +119,47 @@ const getMemberActivity = async (req, res) => {
 const getStatistics = async (req, res) => {
     try {
         // Total books
-        const [totalBooks] = await pool.execute(
+        const totalBooksResult = await pool.query(
             'SELECT COUNT(*) AS total FROM books'
         );
 
         // Total copies
-        const [totalCopies] = await pool.execute(
+        const totalCopiesResult = await pool.query(
             'SELECT SUM(total_copies) AS total FROM books'
         );
 
         // Available copies
-        const [availableCopies] = await pool.execute(
+        const availableCopiesResult = await pool.query(
             'SELECT SUM(available_copies) AS total FROM books'
         );
 
         // Active loans
-        const [activeLoans] = await pool.execute(
+        const activeLoansResult = await pool.query(
             'SELECT COUNT(*) AS total FROM loans WHERE return_date IS NULL'
         );
 
         // Overdue loans
-        const [overdueLoans] = await pool.execute(
-            'SELECT COUNT(*) AS total FROM loans WHERE return_date IS NULL AND due_date < CURDATE()'
+        const overdueLoansResult = await pool.query(
+            'SELECT COUNT(*) AS total FROM loans WHERE return_date IS NULL AND due_date < CURRENT_DATE'
         );
 
         // Active reservations
-        const [activeReservations] = await pool.execute(
-            'SELECT COUNT(*) AS total FROM reservations WHERE status = "active"'
+        const activeReservationsResult = await pool.query(
+            "SELECT COUNT(*) AS total FROM reservations WHERE status = 'active'"
         );
 
         // Total members
-        const [totalMembers] = await pool.execute(
-            'SELECT COUNT(*) AS total FROM users WHERE role = "member"'
+        const totalMembersResult = await pool.query(
+            "SELECT COUNT(*) AS total FROM users WHERE role = 'member'"
         );
 
         // Total fines collected (returned loans)
-        const [totalFines] = await pool.execute(
+        const totalFinesResult = await pool.query(
             'SELECT SUM(fine_amount) AS total FROM loans WHERE return_date IS NOT NULL'
         );
 
         // Outstanding fines
-        const [outstandingFines] = await pool.execute(
+        const outstandingFinesResult = await pool.query(
             'SELECT SUM(fine_amount) AS total FROM loans WHERE return_date IS NULL AND fine_amount > 0'
         );
 
@@ -167,24 +167,24 @@ const getStatistics = async (req, res) => {
             success: true,
             data: {
                 books: {
-                    unique_titles: totalBooks[0].total,
-                    total_copies: totalCopies[0].total || 0,
-                    available_copies: availableCopies[0].total || 0,
-                    borrowed_copies: (totalCopies[0].total || 0) - (availableCopies[0].total || 0)
+                    unique_titles: parseInt(totalBooksResult.rows[0].total),
+                    total_copies: parseInt(totalCopiesResult.rows[0].total) || 0,
+                    available_copies: parseInt(availableCopiesResult.rows[0].total) || 0,
+                    borrowed_copies: (parseInt(totalCopiesResult.rows[0].total) || 0) - (parseInt(availableCopiesResult.rows[0].total) || 0)
                 },
                 loans: {
-                    active: activeLoans[0].total,
-                    overdue: overdueLoans[0].total
+                    active: parseInt(activeLoansResult.rows[0].total),
+                    overdue: parseInt(overdueLoansResult.rows[0].total)
                 },
                 reservations: {
-                    active: activeReservations[0].total
+                    active: parseInt(activeReservationsResult.rows[0].total)
                 },
                 members: {
-                    total: totalMembers[0].total
+                    total: parseInt(totalMembersResult.rows[0].total)
                 },
                 fines: {
-                    collected: parseFloat(totalFines[0].total || 0).toFixed(2),
-                    outstanding: parseFloat(outstandingFines[0].total || 0).toFixed(2)
+                    collected: parseFloat(totalFinesResult.rows[0].total || 0).toFixed(2),
+                    outstanding: parseFloat(outstandingFinesResult.rows[0].total || 0).toFixed(2)
                 }
             }
         });
@@ -208,22 +208,22 @@ const getLoansByDate = async (req, res) => {
     }
 
     try {
-        const [loans] = await pool.execute(
+        const result = await pool.query(
             `SELECT 
-                DATE(l.borrow_date) AS date,
+                l.borrow_date::DATE AS date,
                 COUNT(*) AS loans_count,
                 COUNT(DISTINCT l.user_id) AS unique_users,
                 COUNT(DISTINCT l.book_id) AS unique_books
             FROM loans l
-            WHERE l.borrow_date BETWEEN ? AND ?
-            GROUP BY DATE(l.borrow_date)
+            WHERE l.borrow_date BETWEEN $1 AND $2
+            GROUP BY l.borrow_date::DATE
             ORDER BY date`,
             [start_date, end_date]
         );
 
         res.json({
             success: true,
-            data: loans
+            data: result.rows
         });
     } catch (error) {
         throw error;

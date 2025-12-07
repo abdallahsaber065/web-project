@@ -16,19 +16,19 @@ const createReservation = async (req, res) => {
 
     try {
         // Check if book is available
-        const [books] = await pool.execute(
-            'SELECT available_copies FROM books WHERE id = ?',
+        const booksResult = await pool.query(
+            'SELECT available_copies FROM books WHERE id = $1',
             [book_id]
         );
 
-        if (books.length === 0) {
+        if (booksResult.rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Book not found'
             });
         }
 
-        if (books[0].available_copies > 0) {
+        if (booksResult.rows[0].available_copies > 0) {
             return res.status(400).json({
                 success: false,
                 message: 'Book is currently available. Please borrow it instead.'
@@ -36,12 +36,12 @@ const createReservation = async (req, res) => {
         }
 
         // Check if user already has active reservation for this book
-        const [existing] = await pool.execute(
-            'SELECT id FROM reservations WHERE user_id = ? AND book_id = ? AND status = "active"',
+        const existingResult = await pool.query(
+            "SELECT id FROM reservations WHERE user_id = $1 AND book_id = $2 AND status = 'active'",
             [user_id, book_id]
         );
 
-        if (existing.length > 0) {
+        if (existingResult.rows.length > 0) {
             return res.status(400).json({
                 success: false,
                 message: 'You already have an active reservation for this book'
@@ -49,27 +49,29 @@ const createReservation = async (req, res) => {
         }
 
         // Create reservation
-        const [result] = await pool.execute(
-            'INSERT INTO reservations (user_id, book_id) VALUES (?, ?)',
+        const result = await pool.query(
+            'INSERT INTO reservations (user_id, book_id) VALUES ($1, $2) RETURNING id',
             [user_id, book_id]
         );
 
+        const reservationId = result.rows[0].id;
+
         // Get queue position
-        const [queue] = await pool.execute(
+        const queueResult = await pool.query(
             `SELECT COUNT(*) + 1 AS position
              FROM reservations
-             WHERE book_id = ? AND status = 'active' AND reserved_at < (
-                 SELECT reserved_at FROM reservations WHERE id = ?
+             WHERE book_id = $1 AND status = 'active' AND reserved_at < (
+                 SELECT reserved_at FROM reservations WHERE id = $2
              )`,
-            [book_id, result.insertId]
+            [book_id, reservationId]
         );
 
         res.status(201).json({
             success: true,
             message: 'Reservation created successfully',
             data: {
-                reservation_id: result.insertId,
-                queue_position: queue[0].position
+                reservation_id: reservationId,
+                queue_position: parseInt(queueResult.rows[0].position)
             }
         });
     } catch (error) {
@@ -85,7 +87,7 @@ const getMyReservations = async (req, res) => {
     const user_id = req.user.id;
 
     try {
-        const [reservations] = await pool.execute(
+        const result = await pool.query(
             `SELECT 
                 r.id,
                 r.book_id,
@@ -100,14 +102,14 @@ const getMyReservations = async (req, res) => {
                    AND r2.reserved_at < r.reserved_at) + 1 AS queue_position
             FROM reservations r
             JOIN books b ON r.book_id = b.id
-            WHERE r.user_id = ?
+            WHERE r.user_id = $1
             ORDER BY r.reserved_at DESC`,
             [user_id]
         );
 
         res.json({
             success: true,
-            data: reservations
+            data: result.rows
         });
     } catch (error) {
         throw error;
@@ -145,24 +147,27 @@ const getAllReservations = async (req, res) => {
         `;
 
         const params = [];
+        let paramIndex = 1;
 
         if (book_id) {
-            query += ' AND r.book_id = ?';
+            query += ` AND r.book_id = $${paramIndex}`;
             params.push(book_id);
+            paramIndex++;
         }
 
         if (status) {
-            query += ' AND r.status = ?';
+            query += ` AND r.status = $${paramIndex}`;
             params.push(status);
+            paramIndex++;
         }
 
         query += ' ORDER BY r.book_id, r.reserved_at';
 
-        const [reservations] = await pool.execute(query, params);
+        const result = await pool.query(query, params);
 
         res.json({
             success: true,
-            data: reservations
+            data: result.rows
         });
     } catch (error) {
         throw error;
@@ -180,26 +185,26 @@ const cancelReservation = async (req, res) => {
 
     try {
         // Check reservation exists and belongs to user (or user is admin/librarian)
-        const [reservations] = await pool.execute(
-            'SELECT user_id, status FROM reservations WHERE id = ?',
+        const reservationsResult = await pool.query(
+            'SELECT user_id, status FROM reservations WHERE id = $1',
             [id]
         );
 
-        if (reservations.length === 0) {
+        if (reservationsResult.rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Reservation not found'
             });
         }
 
-        if (user_role === 'member' && reservations[0].user_id !== user_id) {
+        if (user_role === 'member' && reservationsResult.rows[0].user_id !== user_id) {
             return res.status(403).json({
                 success: false,
                 message: 'You can only cancel your own reservations'
             });
         }
 
-        if (reservations[0].status !== 'active') {
+        if (reservationsResult.rows[0].status !== 'active') {
             return res.status(400).json({
                 success: false,
                 message: 'Reservation is not active'
@@ -207,8 +212,8 @@ const cancelReservation = async (req, res) => {
         }
 
         // Update reservation status
-        await pool.execute(
-            'UPDATE reservations SET status = "cancelled" WHERE id = ?',
+        await pool.query(
+            "UPDATE reservations SET status = 'cancelled' WHERE id = $1",
             [id]
         );
 

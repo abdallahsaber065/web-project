@@ -1,7 +1,6 @@
 -- Library Management System - Sample Data
 -- Run this after schema.sql to populate the database with test data
-
-USE library_management;
+-- For PostgreSQL
 
 -- =====================================================
 -- SEED DATA: Users
@@ -182,23 +181,23 @@ INSERT INTO book_categories (book_id, category_id) VALUES
 
 -- Active loans
 INSERT INTO loans (user_id, book_id, borrow_date, due_date, return_date, status) VALUES
-(4, 2, DATE_SUB(CURDATE(), INTERVAL 5 DAY), DATE_ADD(CURDATE(), INTERVAL 9 DAY), NULL, 'borrowed'),
-(5, 10, DATE_SUB(CURDATE(), INTERVAL 7 DAY), DATE_ADD(CURDATE(), INTERVAL 7 DAY), NULL, 'borrowed'),
-(6, 5, DATE_SUB(CURDATE(), INTERVAL 10 DAY), DATE_ADD(CURDATE(), INTERVAL 4 DAY), NULL, 'borrowed'),
-(7, 13, DATE_SUB(CURDATE(), INTERVAL 3 DAY), DATE_ADD(CURDATE(), INTERVAL 11 DAY), NULL, 'borrowed');
+(4, 2, CURRENT_DATE - INTERVAL '5 days', CURRENT_DATE + INTERVAL '9 days', NULL, 'borrowed'),
+(5, 10, CURRENT_DATE - INTERVAL '7 days', CURRENT_DATE + INTERVAL '7 days', NULL, 'borrowed'),
+(6, 5, CURRENT_DATE - INTERVAL '10 days', CURRENT_DATE + INTERVAL '4 days', NULL, 'borrowed'),
+(7, 13, CURRENT_DATE - INTERVAL '3 days', CURRENT_DATE + INTERVAL '11 days', NULL, 'borrowed');
 
 -- Overdue loans
 INSERT INTO loans (user_id, book_id, borrow_date, due_date, return_date, status, fine_amount) VALUES
-(8, 12, DATE_SUB(CURDATE(), INTERVAL 20 DAY), DATE_SUB(CURDATE(), INTERVAL 6 DAY), NULL, 'overdue', 3.00),
-(9, 6, DATE_SUB(CURDATE(), INTERVAL 18 DAY), DATE_SUB(CURDATE(), INTERVAL 4 DAY), NULL, 'overdue', 2.00);
+(8, 12, CURRENT_DATE - INTERVAL '20 days', CURRENT_DATE - INTERVAL '6 days', NULL, 'overdue', 3.00),
+(9, 6, CURRENT_DATE - INTERVAL '18 days', CURRENT_DATE - INTERVAL '4 days', NULL, 'overdue', 2.00);
 
 -- Returned loans (past)
 INSERT INTO loans (user_id, book_id, borrow_date, due_date, return_date, status, fine_amount) VALUES
-(4, 8, DATE_SUB(CURDATE(), INTERVAL 30 DAY), DATE_SUB(CURDATE(), INTERVAL 16 DAY), DATE_SUB(CURDATE(), INTERVAL 15 DAY), 'returned', 0.00),
-(5, 9, DATE_SUB(CURDATE(), INTERVAL 25 DAY), DATE_SUB(CURDATE(), INTERVAL 11 DAY), DATE_SUB(CURDATE(), INTERVAL 10 DAY), 'returned', 0.00),
-(6, 19, DATE_SUB(CURDATE(), INTERVAL 22 DAY), DATE_SUB(CURDATE(), INTERVAL 8 DAY), DATE_SUB(CURDATE(), INTERVAL 6 DAY), 'returned', 1.00),
-(7, 14, DATE_SUB(CURDATE(), INTERVAL 20 DAY), DATE_SUB(CURDATE(), INTERVAL 6 DAY), DATE_SUB(CURDATE(), INTERVAL 5 DAY), 'returned', 0.00),
-(8, 20, DATE_SUB(CURDATE(), INTERVAL 35 DAY), DATE_SUB(CURDATE(), INTERVAL 21 DAY), DATE_SUB(CURDATE(), INTERVAL 20 DAY), 'returned', 0.00);
+(4, 8, CURRENT_DATE - INTERVAL '30 days', CURRENT_DATE - INTERVAL '16 days', CURRENT_DATE - INTERVAL '15 days', 'returned', 0.00),
+(5, 9, CURRENT_DATE - INTERVAL '25 days', CURRENT_DATE - INTERVAL '11 days', CURRENT_DATE - INTERVAL '10 days', 'returned', 0.00),
+(6, 19, CURRENT_DATE - INTERVAL '22 days', CURRENT_DATE - INTERVAL '8 days', CURRENT_DATE - INTERVAL '6 days', 'returned', 1.00),
+(7, 14, CURRENT_DATE - INTERVAL '20 days', CURRENT_DATE - INTERVAL '6 days', CURRENT_DATE - INTERVAL '5 days', 'returned', 0.00),
+(8, 20, CURRENT_DATE - INTERVAL '35 days', CURRENT_DATE - INTERVAL '21 days', CURRENT_DATE - INTERVAL '20 days', 'returned', 0.00);
 
 -- Update available copies based on active loans
 UPDATE books SET available_copies = available_copies - 1 WHERE id = 2;

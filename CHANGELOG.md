@@ -2,6 +2,53 @@
 
 All notable changes to the Library Management System project will be documented in this file.
 
+## [2.0.0] - 2024-12-07
+
+### Changed - Database Migration from MySQL to PostgreSQL
+
+#### Database
+- **Complete migration from MySQL to PostgreSQL**
+- Rewrote `db/schema.sql` for PostgreSQL syntax:
+  - Changed `AUTO_INCREMENT` to `SERIAL`
+  - Converted MySQL `ENUM` types to PostgreSQL custom `TYPE`
+  - Changed `YEAR` column type to `SMALLINT`
+  - Updated stored procedures to PostgreSQL functions using `plpgsql`
+  - Replaced MySQL `DELIMITER` syntax with `$$` notation
+  - Updated triggers syntax for PostgreSQL
+  - Changed `GROUP_CONCAT` to `STRING_AGG`
+  - Updated date functions: `CURDATE()` → `CURRENT_DATE`, `DATE_ADD/SUB` → interval arithmetic
+- Rewrote `db/seed.sql` for PostgreSQL:
+  - Removed `USE database` statement
+  - Updated date interval syntax
+
+#### Backend
+- **Updated database driver from mysql2 to pg:**
+  - Changed `package.json` dependency from `mysql2` to `pg`
+  - Rewrote `backend/src/config/database.js` for PostgreSQL Pool
+  - Updated default port from 3306 to 5432
+- **Updated all controllers for PostgreSQL syntax:**
+  - Changed parameterized query placeholders from `?` to `$1, $2, etc.`
+  - Updated result destructuring: `[rows]` → `{ rows }`
+  - Changed `insertId` to `RETURNING id` clause
+  - Changed `affectedRows` to `rowCount`
+  - Replaced `GROUP_CONCAT` with `STRING_AGG`
+  - Changed `LIKE` to `ILIKE` for case-insensitive searches
+  - Updated date functions throughout
+  - Changed MySQL stored procedure calls to PostgreSQL function calls
+
+#### Configuration
+- Updated `.env` and `.env.example`:
+  - Changed default port to 5432
+  - Updated comments to reflect PostgreSQL
+- Updated `backend/src/config/config.js` with PostgreSQL defaults
+
+#### Documentation
+- Updated `README.md`:
+  - Changed all MySQL references to PostgreSQL
+  - Updated installation instructions for PostgreSQL
+  - Updated database setup commands
+  - Updated tech stack section
+
 ## [1.0.1] - 2024-01-21
 
 ### Fixed
@@ -230,7 +277,7 @@ All notable changes to the Library Management System project will be documented 
 ### Dependencies
 
 - express ^4.18.2
-- mysql2 ^3.6.5
+- pg ^8.11.3
 - bcrypt ^5.1.1
 - jsonwebtoken ^9.0.2
 - dotenv ^16.3.1

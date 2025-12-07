@@ -22,15 +22,17 @@ const register = async (req, res) => {
         const password_hash = await bcrypt.hash(password, saltRounds);
 
         // Insert user into database
-        const [result] = await pool.execute(
-            'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
+        const result = await pool.query(
+            'INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id',
             [name, email, password_hash, role === 'member' ? 'member' : role]
         );
+
+        const userId = result.rows[0].id;
 
         // Generate JWT token for immediate login
         const token = jwt.sign(
             {
-                id: result.insertId,
+                id: userId,
                 email,
                 role: role === 'member' ? 'member' : role
             },
@@ -44,7 +46,7 @@ const register = async (req, res) => {
             data: {
                 token,
                 user: {
-                    id: result.insertId,
+                    id: userId,
                     name,
                     email,
                     role: role === 'member' ? 'member' : role
@@ -65,19 +67,19 @@ const login = async (req, res) => {
 
     try {
         // Find user by email
-        const [users] = await pool.execute(
-            'SELECT id, name, email, password_hash, role FROM users WHERE email = ?',
+        const result = await pool.query(
+            'SELECT id, name, email, password_hash, role FROM users WHERE email = $1',
             [email]
         );
 
-        if (users.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(401).json({
                 success: false,
                 message: 'Invalid email or password'
             });
         }
 
-        const user = users[0];
+        const user = result.rows[0];
 
         // Compare password
         const isPasswordValid = await bcrypt.compare(password, user.password_hash);
@@ -126,12 +128,12 @@ const getProfile = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        const [users] = await pool.execute(
-            'SELECT id, name, email, role, created_at FROM users WHERE id = ?',
+        const result = await pool.query(
+            'SELECT id, name, email, role, created_at FROM users WHERE id = $1',
             [userId]
         );
 
-        if (users.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
@@ -140,7 +142,7 @@ const getProfile = async (req, res) => {
 
         res.json({
             success: true,
-            data: users[0]
+            data: result.rows[0]
         });
     } catch (error) {
         throw error;

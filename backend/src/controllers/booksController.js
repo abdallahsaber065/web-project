@@ -7,7 +7,7 @@
 const { pool } = require('../config/database');
 
 // Helper: ensure author names exist and return their IDs
-async function getOrCreateAuthorIdsByNames(names, connection) {
+async function getOrCreateAuthorIdsByNames(names, client) {
     const ids = [];
     const seen = new Set();
     for (let name of names) {
@@ -19,28 +19,28 @@ async function getOrCreateAuthorIdsByNames(names, connection) {
         seen.add(lowerName);
 
         // Try to find existing author by case-insensitive match
-        const [rows] = await connection.execute(
-            'SELECT id FROM authors WHERE LOWER(name) = LOWER(?) LIMIT 1',
+        const result = await client.query(
+            'SELECT id FROM authors WHERE LOWER(name) = LOWER($1) LIMIT 1',
             [name]
         );
 
-        if (rows.length > 0) {
-            ids.push(rows[0].id);
+        if (result.rows.length > 0) {
+            ids.push(result.rows[0].id);
             continue;
         }
 
         // Insert new author
-        const [insertResult] = await connection.execute(
-            'INSERT INTO authors (name) VALUES (?)',
+        const insertResult = await client.query(
+            'INSERT INTO authors (name) VALUES ($1) RETURNING id',
             [name]
         );
-        ids.push(insertResult.insertId);
+        ids.push(insertResult.rows[0].id);
     }
     return ids;
 }
 
 // Helper: ensure category names exist and return their IDs
-async function getOrCreateCategoryIdsByNames(names, connection) {
+async function getOrCreateCategoryIdsByNames(names, client) {
     const ids = [];
     const seen = new Set();
     for (let name of names) {
@@ -51,22 +51,22 @@ async function getOrCreateCategoryIdsByNames(names, connection) {
         if (seen.has(lowerName)) continue;
         seen.add(lowerName);
 
-        const [rows] = await connection.execute(
-            'SELECT id FROM categories WHERE LOWER(name) = LOWER(?) LIMIT 1',
+        const result = await client.query(
+            'SELECT id FROM categories WHERE LOWER(name) = LOWER($1) LIMIT 1',
             [name]
         );
 
-        if (rows.length > 0) {
-            ids.push(rows[0].id);
+        if (result.rows.length > 0) {
+            ids.push(result.rows[0].id);
             continue;
         }
 
         // Insert new category
-        const [insertResult] = await connection.execute(
-            'INSERT INTO categories (name) VALUES (?)',
+        const insertResult = await client.query(
+            'INSERT INTO categories (name) VALUES ($1) RETURNING id',
             [name]
         );
-        ids.push(insertResult.insertId);
+        ids.push(insertResult.rows[0].id);
     }
     return ids;
 }
@@ -98,8 +98,8 @@ const getBooks = async (req, res) => {
                 b.publication_year,
                 b.total_copies,
                 b.available_copies,
-                GROUP_CONCAT(DISTINCT a.name ORDER BY a.name SEPARATOR ', ') AS authors,
-                GROUP_CONCAT(DISTINCT c.name ORDER BY c.name SEPARATOR ', ') AS categories
+                STRING_AGG(DISTINCT a.name, ', ' ORDER BY a.name) AS authors,
+                STRING_AGG(DISTINCT c.name, ', ' ORDER BY c.name) AS categories
             FROM books b
             LEFT JOIN book_authors ba ON b.id = ba.book_id
             LEFT JOIN authors a ON ba.author_id = a.id
@@ -109,24 +109,28 @@ const getBooks = async (req, res) => {
         `;
 
         const params = [];
+        let paramIndex = 1;
 
         // Add search filter
         if (search) {
-            query += ` AND (b.title LIKE ? OR b.isbn LIKE ? OR b.description LIKE ?)`;
+            query += ` AND (b.title ILIKE $${paramIndex} OR b.isbn ILIKE $${paramIndex + 1} OR b.description ILIKE $${paramIndex + 2})`;
             const searchPattern = `%${search}%`;
             params.push(searchPattern, searchPattern, searchPattern);
+            paramIndex += 3;
         }
 
         // Add author filter
         if (author) {
-            query += ` AND a.name LIKE ?`;
+            query += ` AND a.name ILIKE $${paramIndex}`;
             params.push(`%${author}%`);
+            paramIndex++;
         }
 
         // Add category filter
         if (category) {
-            query += ` AND c.name LIKE ?`;
+            query += ` AND c.name ILIKE $${paramIndex}`;
             params.push(`%${category}%`);
+            paramIndex++;
         }
 
         // Add availability filter
@@ -136,10 +140,10 @@ const getBooks = async (req, res) => {
             query += ` AND b.available_copies = 0`;
         }
 
-        query += ` GROUP BY b.id ORDER BY b.title LIMIT ? OFFSET ?`;
+        query += ` GROUP BY b.id ORDER BY b.title LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
         params.push(parseInt(limit), parseInt(offset));
 
-        const [books] = await pool.execute(query, params);
+        const booksResult = await pool.query(query, params);
 
         // Get total count for pagination
         let countQuery = `
@@ -153,18 +157,22 @@ const getBooks = async (req, res) => {
         `;
 
         const countParams = [];
+        let countParamIndex = 1;
         if (search) {
-            countQuery += ` AND (b.title LIKE ? OR b.isbn LIKE ? OR b.description LIKE ?)`;
+            countQuery += ` AND (b.title ILIKE $${countParamIndex} OR b.isbn ILIKE $${countParamIndex + 1} OR b.description ILIKE $${countParamIndex + 2})`;
             const searchPattern = `%${search}%`;
             countParams.push(searchPattern, searchPattern, searchPattern);
+            countParamIndex += 3;
         }
         if (author) {
-            countQuery += ` AND a.name LIKE ?`;
+            countQuery += ` AND a.name ILIKE $${countParamIndex}`;
             countParams.push(`%${author}%`);
+            countParamIndex++;
         }
         if (category) {
-            countQuery += ` AND c.name LIKE ?`;
+            countQuery += ` AND c.name ILIKE $${countParamIndex}`;
             countParams.push(`%${category}%`);
+            countParamIndex++;
         }
         if (available === 'true') {
             countQuery += ` AND b.available_copies > 0`;
@@ -172,13 +180,13 @@ const getBooks = async (req, res) => {
             countQuery += ` AND b.available_copies = 0`;
         }
 
-        const [countResult] = await pool.execute(countQuery, countParams);
-        const total = countResult[0].total;
+        const countResult = await pool.query(countQuery, countParams);
+        const total = parseInt(countResult.rows[0].total);
 
         res.json({
             success: true,
             data: {
-                books,
+                books: booksResult.rows,
                 pagination: {
                     page: parseInt(page),
                     limit: parseInt(limit),
@@ -200,7 +208,7 @@ const getBookById = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const [books] = await pool.execute(
+        const result = await pool.query(
             `SELECT 
                 b.id,
                 b.isbn,
@@ -210,26 +218,26 @@ const getBookById = async (req, res) => {
                 b.publication_year,
                 b.total_copies,
                 b.available_copies,
-                GROUP_CONCAT(DISTINCT CONCAT(a.id, ':', a.name) SEPARATOR '||') AS authors,
-                GROUP_CONCAT(DISTINCT CONCAT(c.id, ':', c.name) SEPARATOR '||') AS categories
+                STRING_AGG(DISTINCT a.id || ':' || a.name, '||') AS authors,
+                STRING_AGG(DISTINCT c.id || ':' || c.name, '||') AS categories
             FROM books b
             LEFT JOIN book_authors ba ON b.id = ba.book_id
             LEFT JOIN authors a ON ba.author_id = a.id
             LEFT JOIN book_categories bc ON b.id = bc.book_id
             LEFT JOIN categories c ON bc.category_id = c.id
-            WHERE b.id = ?
+            WHERE b.id = $1
             GROUP BY b.id`,
             [id]
         );
 
-        if (books.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Book not found'
             });
         }
 
-        const book = books[0];
+        const book = result.rows[0];
 
         // Parse authors and categories
         book.authors = book.authors
@@ -273,19 +281,19 @@ const createBook = async (req, res) => {
         category_names
     } = req.body;
 
-    const connection = await pool.getConnection();
+    const client = await pool.connect();
 
     try {
-        await connection.beginTransaction();
+        await client.query('BEGIN');
 
         // Insert book
-        const [result] = await connection.execute(
+        const result = await client.query(
             `INSERT INTO books (isbn, title, description, publisher, publication_year, total_copies, available_copies)
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
             [isbn, title, description, publisher, publication_year, total_copies, total_copies]
         );
 
-        const bookId = result.insertId;
+        const bookId = result.rows[0].id;
 
         // Prepare authors: accept author_ids or author_names
         let authorIdsArray = [];
@@ -298,14 +306,14 @@ const createBook = async (req, res) => {
         // If author_names provided, create or find those authors
         if (author_names) {
             const names = Array.isArray(author_names) ? author_names : (String(author_names).split(',').map(s => s.trim()).filter(Boolean));
-            const newIds = await getOrCreateAuthorIdsByNames(names, connection);
+            const newIds = await getOrCreateAuthorIdsByNames(names, client);
             authorIdsArray = Array.from(new Set([...authorIdsArray, ...newIds]));
         }
 
         // Insert book-author relationships
         for (const authorId of authorIdsArray) {
-            await connection.execute(
-                'INSERT INTO book_authors (book_id, author_id) VALUES (?, ?)',
+            await client.query(
+                'INSERT INTO book_authors (book_id, author_id) VALUES ($1, $2)',
                 [bookId, authorId]
             );
         }
@@ -319,19 +327,19 @@ const createBook = async (req, res) => {
 
         if (category_names) {
             const catNames = Array.isArray(category_names) ? category_names : (String(category_names).split(',').map(s => s.trim()).filter(Boolean));
-            const newCatIds = await getOrCreateCategoryIdsByNames(catNames, connection);
+            const newCatIds = await getOrCreateCategoryIdsByNames(catNames, client);
             categoryIdsArray = Array.from(new Set([...categoryIdsArray, ...newCatIds]));
         }
 
         // Insert book-category relationships
         for (const categoryId of categoryIdsArray) {
-            await connection.execute(
-                'INSERT INTO book_categories (book_id, category_id) VALUES (?, ?)',
+            await client.query(
+                'INSERT INTO book_categories (book_id, category_id) VALUES ($1, $2)',
                 [bookId, categoryId]
             );
         }
 
-        await connection.commit();
+        await client.query('COMMIT');
 
         res.status(201).json({
             success: true,
@@ -339,10 +347,10 @@ const createBook = async (req, res) => {
             data: { id: bookId }
         });
     } catch (error) {
-        await connection.rollback();
+        await client.query('ROLLBACK');
         throw error;
     } finally {
-        connection.release();
+        client.release();
     }
 };
 
@@ -365,22 +373,22 @@ const updateBook = async (req, res) => {
         category_names
     } = req.body;
 
-    const connection = await pool.getConnection();
+    const client = await pool.connect();
 
     try {
-        await connection.beginTransaction();
+        await client.query('BEGIN');
 
         // Check if book exists
-        const [books] = await connection.execute('SELECT id, available_copies FROM books WHERE id = ?', [id]);
-        if (books.length === 0) {
-            await connection.rollback();
+        const booksResult = await client.query('SELECT id, available_copies FROM books WHERE id = $1', [id]);
+        if (booksResult.rows.length === 0) {
+            await client.query('ROLLBACK');
             return res.status(404).json({
                 success: false,
                 message: 'Book not found'
             });
         }
 
-        const currentAvailableCopies = books[0].available_copies;
+        const currentAvailableCopies = booksResult.rows[0].available_copies;
         const currentTotalCopies = total_copies !== undefined ? total_copies : null;
 
         // Calculate new available copies if total_copies changed
@@ -391,16 +399,16 @@ const updateBook = async (req, res) => {
         }
 
         // Update book
-        await connection.execute(
+        await client.query(
             `UPDATE books 
-             SET isbn = COALESCE(?, isbn),
-                 title = COALESCE(?, title),
-                 description = COALESCE(?, description),
-                 publisher = COALESCE(?, publisher),
-                 publication_year = COALESCE(?, publication_year),
-                 total_copies = COALESCE(?, total_copies),
-                 available_copies = ?
-             WHERE id = ?`,
+             SET isbn = COALESCE($1, isbn),
+                 title = COALESCE($2, title),
+                 description = COALESCE($3, description),
+                 publisher = COALESCE($4, publisher),
+                 publication_year = COALESCE($5, publication_year),
+                 total_copies = COALESCE($6, total_copies),
+                 available_copies = $7
+             WHERE id = $8`,
             [
                 isbn !== undefined ? isbn : null,
                 title !== undefined ? title : null,
@@ -423,15 +431,15 @@ const updateBook = async (req, res) => {
 
         if (author_names) {
             const names = Array.isArray(author_names) ? author_names : (String(author_names).split(',').map(s => s.trim()).filter(Boolean));
-            const newIds = await getOrCreateAuthorIdsByNames(names, connection);
+            const newIds = await getOrCreateAuthorIdsByNames(names, client);
             authorIdsArray = Array.from(new Set([...authorIdsArray, ...newIds]));
         }
 
         if (authorIdsArray.length > 0) {
-            await connection.execute('DELETE FROM book_authors WHERE book_id = ?', [id]);
+            await client.query('DELETE FROM book_authors WHERE book_id = $1', [id]);
             for (const authorId of authorIdsArray) {
-                await connection.execute(
-                    'INSERT INTO book_authors (book_id, author_id) VALUES (?, ?)',
+                await client.query(
+                    'INSERT INTO book_authors (book_id, author_id) VALUES ($1, $2)',
                     [id, authorId]
                 );
             }
@@ -447,31 +455,31 @@ const updateBook = async (req, res) => {
 
         if (category_names) {
             const names = Array.isArray(category_names) ? category_names : (String(category_names).split(',').map(s => s.trim()).filter(Boolean));
-            const newIds = await getOrCreateCategoryIdsByNames(names, connection);
+            const newIds = await getOrCreateCategoryIdsByNames(names, client);
             categoryIdsArray = Array.from(new Set([...categoryIdsArray, ...newIds]));
         }
 
         if (categoryIdsArray.length > 0) {
-            await connection.execute('DELETE FROM book_categories WHERE book_id = ?', [id]);
+            await client.query('DELETE FROM book_categories WHERE book_id = $1', [id]);
             for (const categoryId of categoryIdsArray) {
-                await connection.execute(
-                    'INSERT INTO book_categories (book_id, category_id) VALUES (?, ?)',
+                await client.query(
+                    'INSERT INTO book_categories (book_id, category_id) VALUES ($1, $2)',
                     [id, categoryId]
                 );
             }
         }
 
-        await connection.commit();
+        await client.query('COMMIT');
 
         res.json({
             success: true,
             message: 'Book updated successfully'
         });
     } catch (error) {
-        await connection.rollback();
+        await client.query('ROLLBACK');
         throw error;
     } finally {
-        connection.release();
+        client.release();
     }
 };
 
@@ -484,21 +492,21 @@ const deleteBook = async (req, res) => {
 
     try {
         // Check for active loans
-        const [loans] = await pool.execute(
-            'SELECT COUNT(*) AS count FROM loans WHERE book_id = ? AND return_date IS NULL',
+        const loansResult = await pool.query(
+            'SELECT COUNT(*) AS count FROM loans WHERE book_id = $1 AND return_date IS NULL',
             [id]
         );
 
-        if (loans[0].count > 0) {
+        if (parseInt(loansResult.rows[0].count) > 0) {
             return res.status(409).json({
                 success: false,
                 message: 'Cannot delete book with active loans'
             });
         }
 
-        const [result] = await pool.execute('DELETE FROM books WHERE id = ?', [id]);
+        const result = await pool.query('DELETE FROM books WHERE id = $1', [id]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Book not found'

@@ -1,13 +1,13 @@
 # Library Management System
 
-A comprehensive web-based library management system built with Node.js, MySQL, and vanilla JavaScript. This project implements a complete library management solution with user authentication, book catalog, borrowing system, reservations, and administrative features.
+A comprehensive web-based library management system built with Node.js, PostgreSQL, and vanilla JavaScript. This project implements a complete library management solution with user authentication, book catalog, borrowing system, reservations, and administrative features.
 
 ## 🎓 University Project
 
 This is a full-stack web development project for a university course demonstrating:
 
 - Backend development with Node.js and Express.js
-- Database design and implementation with MySQL
+- Database design and implementation with PostgreSQL
 - Frontend development with vanilla HTML, CSS, and JavaScript (no frameworks)
 - RESTful API design
 - Authentication and authorization
@@ -46,7 +46,7 @@ This is a full-stack web development project for a university course demonstrati
 
 - **Runtime:** Node.js (v18+)
 - **Framework:** Express.js v4.18.2
-- **Database:** MySQL v8+ with MySQL2 driver
+- **Database:** PostgreSQL v14+ with pg driver
 - **Authentication:** JWT (jsonwebtoken), bcrypt
 - **Validation:** express-validator v7.0.1
 - **Testing:** Jest v29.7.0, Supertest v6.3.3
@@ -59,10 +59,10 @@ This is a full-stack web development project for a university course demonstrati
 
 ### Database Features
 
-- 8 normalized tables
+- 8 normalized tables with custom ENUM types
 - 3 database views for complex queries
-- 3 stored procedures for business logic
-- 1 trigger for automatic updates
+- 3 stored functions for business logic
+- 2 triggers for automatic updates
 - Proper indexing and foreign key constraints
 
 ## 📁 Project Structure
@@ -115,7 +115,7 @@ web/
 ### Prerequisites
 
 - Node.js v18 or higher
-- MySQL v8 or higher
+- PostgreSQL v14 or higher
 - npm (comes with Node.js)
 
 ### Installation
@@ -126,63 +126,61 @@ web/
    git clone <repository-url>
    cd web
    ```
-
 2. **Install dependencies**
 
    ```bash
    npm install
    ```
-
 3. **Set up the database**
 
    ```bash
-   # Create database
-   mysql -u root -p -e "CREATE DATABASE library_db;"
-   
-   # Run schema
-   mysql -u root -p library_db < db/schema.sql
-   
-   # Load sample data (optional)
-   mysql -u root -p library_db < db/seed.sql
-   ```
+   # Create database user and database
+   psql -U postgres -c "CREATE USER library_management WITH PASSWORD 'library_management_password';"
+   psql -U postgres -c "CREATE DATABASE library_management OWNER library_management;"
+   psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE library_management TO library_management;"
 
+   # Run schema
+   psql -U library_management -d library_management -f db/schema.sql
+
+   # Load sample data (optional)
+   psql -U library_management -d library_management -f db/seed.sql
+   ```
 4. **Configure environment**
 
    ```bash
    cp .env.example .env
    # Edit .env with your database credentials and JWT secret
    ```
-
 5. **Run the application**
 
    ```bash
    # Development mode (with auto-restart)
    npm run dev
-   
+
    # Production mode
    npm start
    ```
-
 6. **Access the application**
-   - Frontend: <http://localhost:3000>
-   - API: <http://localhost:3000/api>
+
+   - Frontend: [http://localhost:3000](http://localhost:3000)
+   - API: [http://localhost:3000/api](http://localhost:3000/api)
 
 ### Default Accounts (after running seed.sql)
 
 **Admin:**
 
 - Email: <admin@library.com>
-- Password: Admin123!@#
+- Password: password123
 
 **Librarian:**
 
-- Email: <sarah.johnson@library.com>
-- Password: Password123!@#
+- Email: <sarah.j@library.com>
+- Password: password123
 
 **Member:**
 
-- Email: <john.doe@email.com>
-- Password: Password123!@#
+- Email: <john.smith@email.com>
+- Password: password123
 
 ## 🧪 Testing
 
@@ -234,7 +232,7 @@ Comprehensive documentation is available in the `docs/` folder:
 
 ### Borrowing System
 
-- Automated borrowing with stored procedures
+- Automated borrowing with stored functions
 - 14-day loan period
 - Automatic fine calculation ($0.50/day)
 - Transaction-safe operations
@@ -318,11 +316,12 @@ See [API Documentation](docs/api.md) for complete details.
 
 ### Common Issues
 
-**MySQL Connection Error:**
+**PostgreSQL Connection Error:**
 
 - Verify database credentials in `.env`
-- Ensure MySQL server is running
+- Ensure PostgreSQL server is running
 - Check database name exists
+- Verify the user has proper permissions
 
 **Port Already in Use:**
 
@@ -332,7 +331,7 @@ See [API Documentation](docs/api.md) for complete details.
 **JWT Token Error:**
 
 - Ensure JWT_SECRET is set in `.env`
-- Check token hasn't expired (default: 7 days)
+- Check token hasn't expired (default: 24 hours)
 
 See [Setup Guide](docs/setup.md#troubleshooting) for more solutions.
 

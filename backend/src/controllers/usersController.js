@@ -17,19 +17,21 @@ const getAllUsers = async (req, res) => {
     try {
         let query = 'SELECT id, name, email, role, created_at FROM users WHERE 1=1';
         const params = [];
+        let paramIndex = 1;
 
         if (role) {
-            query += ' AND role = ?';
+            query += ` AND role = $${paramIndex}`;
             params.push(role);
+            paramIndex++;
         }
 
         query += ' ORDER BY created_at DESC';
 
-        const [users] = await pool.execute(query, params);
+        const result = await pool.query(query, params);
 
         res.json({
             success: true,
-            data: users
+            data: result.rows
         });
     } catch (error) {
         throw error;
@@ -44,12 +46,12 @@ const getUserById = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const [users] = await pool.execute(
-            'SELECT id, name, email, role, created_at FROM users WHERE id = ?',
+        const userResult = await pool.query(
+            'SELECT id, name, email, role, created_at FROM users WHERE id = $1',
             [id]
         );
 
-        if (users.length === 0) {
+        if (userResult.rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
@@ -57,22 +59,22 @@ const getUserById = async (req, res) => {
         }
 
         // Get user's loan statistics
-        const [stats] = await pool.execute(
+        const statsResult = await pool.query(
             `SELECT 
                 COUNT(*) AS total_loans,
                 SUM(CASE WHEN return_date IS NULL THEN 1 ELSE 0 END) AS active_loans,
                 SUM(CASE WHEN status = 'overdue' THEN 1 ELSE 0 END) AS overdue_loans,
                 SUM(fine_amount) AS total_fines
             FROM loans
-            WHERE user_id = ?`,
+            WHERE user_id = $1`,
             [id]
         );
 
         res.json({
             success: true,
             data: {
-                ...users[0],
-                statistics: stats[0]
+                ...userResult.rows[0],
+                statistics: statsResult.rows[0]
             }
         });
     } catch (error) {
@@ -96,12 +98,12 @@ const updateUserRole = async (req, res) => {
     }
 
     try {
-        const [result] = await pool.execute(
-            'UPDATE users SET role = ? WHERE id = ?',
+        const result = await pool.query(
+            'UPDATE users SET role = $1 WHERE id = $2',
             [role, id]
         );
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
@@ -126,21 +128,21 @@ const deleteUser = async (req, res) => {
 
     try {
         // Check for active loans
-        const [loans] = await pool.execute(
-            'SELECT COUNT(*) AS count FROM loans WHERE user_id = ? AND return_date IS NULL',
+        const loansResult = await pool.query(
+            'SELECT COUNT(*) AS count FROM loans WHERE user_id = $1 AND return_date IS NULL',
             [id]
         );
 
-        if (loans[0].count > 0) {
+        if (parseInt(loansResult.rows[0].count) > 0) {
             return res.status(409).json({
                 success: false,
                 message: 'Cannot delete user with active loans'
             });
         }
 
-        const [result] = await pool.execute('DELETE FROM users WHERE id = ?', [id]);
+        const result = await pool.query('DELETE FROM users WHERE id = $1', [id]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
@@ -175,12 +177,12 @@ const resetPassword = async (req, res) => {
         const saltRounds = 10;
         const password_hash = await bcrypt.hash(new_password, saltRounds);
 
-        const [result] = await pool.execute(
-            'UPDATE users SET password_hash = ? WHERE id = ?',
+        const result = await pool.query(
+            'UPDATE users SET password_hash = $1 WHERE id = $2',
             [password_hash, id]
         );
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
