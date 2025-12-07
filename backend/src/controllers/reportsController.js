@@ -60,7 +60,7 @@ const getOverdueLoans = async (req, res) => {
                 l.borrow_date,
                 l.due_date,
                 GREATEST(0, CURRENT_DATE - l.due_date) AS days_overdue,
-                (GREATEST(0, CURRENT_DATE - l.due_date) * $1) AS calculated_fine
+                (GREATEST(0, CURRENT_DATE - l.due_date) * $1::DECIMAL) AS calculated_fine
             FROM loans l
             JOIN users u ON l.user_id = u.id
             JOIN books b ON l.book_id = b.id

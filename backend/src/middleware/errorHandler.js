@@ -27,9 +27,58 @@ const errorHandler = (err, req, res, next) => {
     let status = err.status || 500;
     let message = err.message || 'Internal server error';
 
-    // MySQL/Database errors
+    // PostgreSQL errors (pg driver uses 'code' as SQLSTATE)
     if (err.code) {
         switch (err.code) {
+            // PostgreSQL: unique_violation
+            case '23505':
+                status = 409;
+                message = 'Duplicate entry. Resource already exists.';
+                if (err.detail && err.detail.includes('email')) {
+                    message = 'Email already registered.';
+                }
+                if (err.detail && err.detail.includes('isbn')) {
+                    message = 'Book with this ISBN already exists.';
+                }
+                if (err.constraint && err.constraint.includes('email')) {
+                    message = 'Email already registered.';
+                }
+                if (err.constraint && err.constraint.includes('isbn')) {
+                    message = 'Book with this ISBN already exists.';
+                }
+                break;
+
+            // PostgreSQL: foreign_key_violation
+            case '23503':
+                status = 400;
+                message = 'Invalid reference. Related resource does not exist.';
+                break;
+
+            // PostgreSQL: restrict_violation (cannot delete, referenced by other)
+            case '23001':
+                status = 409;
+                message = 'Cannot delete. Resource is referenced by other records.';
+                break;
+
+            // PostgreSQL: invalid_text_representation
+            case '22P02':
+                status = 400;
+                message = 'Invalid input value format.';
+                break;
+
+            // PostgreSQL: syntax_error
+            case '42601':
+                status = 400;
+                message = 'Query syntax error.';
+                break;
+
+            // PostgreSQL: undefined_column
+            case '42703':
+                status = 400;
+                message = 'Invalid field in query.';
+                break;
+
+            // MySQL compatibility: ER_DUP_ENTRY
             case 'ER_DUP_ENTRY':
                 status = 409;
                 message = 'Duplicate entry. Resource already exists.';
@@ -41,26 +90,18 @@ const errorHandler = (err, req, res, next) => {
                 }
                 break;
 
+            // MySQL compatibility: ER_NO_REFERENCED_ROW
             case 'ER_NO_REFERENCED_ROW':
             case 'ER_NO_REFERENCED_ROW_2':
                 status = 400;
                 message = 'Invalid reference. Related resource does not exist.';
                 break;
 
+            // MySQL compatibility: ER_ROW_IS_REFERENCED
             case 'ER_ROW_IS_REFERENCED':
             case 'ER_ROW_IS_REFERENCED_2':
                 status = 409;
                 message = 'Cannot delete. Resource is referenced by other records.';
-                break;
-
-            case 'ER_BAD_FIELD_ERROR':
-                status = 400;
-                message = 'Invalid field in query.';
-                break;
-
-            case 'ER_PARSE_ERROR':
-                status = 400;
-                message = 'Query syntax error.';
                 break;
 
             case 'ECONNREFUSED':

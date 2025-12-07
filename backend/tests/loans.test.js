@@ -79,12 +79,12 @@ describe('Loans Endpoints', () => {
 
         test('should filter by status', async () => {
             const res = await request(app)
-                .get('/api/loans/my-loans?status=active')
+                .get('/api/loans/my-loans?status=borrowed')
                 .set('Authorization', `Bearer ${memberToken}`);
 
             expect(res.statusCode).toBe(200);
             if (res.body.data.length > 0) {
-                expect(res.body.data[0].status).toBe('active');
+                expect(res.body.data[0].status).toBe('borrowed');
             }
         });
 
