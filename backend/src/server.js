@@ -137,8 +137,10 @@ const startServer = async () => {
     }
 };
 
-// Start the server only if not in test environment
-if (process.env.NODE_ENV !== 'test') {
+// Start the server only if not in test or serverless environment
+// In serverless (Netlify Functions), the app is imported and wrapped by serverless-http
+const isServerless = process.env.SERVERLESS === 'true' || process.env.NETLIFY === 'true';
+if (process.env.NODE_ENV !== 'test' && !isServerless) {
     startServer();
 }
 

@@ -2,6 +2,22 @@
 
 All notable changes to the Library Management System project will be documented in this file.
 
+## [2.1.0] - 2024-12-07
+
+### Added - Netlify Deployment Support
+
+- **Serverless Backend Configuration:**
+  - Added `serverless-http` package for wrapping Express app as Netlify Function
+  - Created `netlify/functions/api.js` serverless function handler
+  - Updated `server.js` to detect serverless environment and skip HTTP server start
+  - Updated `database.js` to handle errors gracefully in serverless mode
+
+- **Netlify Configuration (`netlify.toml`):**
+  - Configured frontend publish directory
+  - Set up Functions directory with esbuild bundler
+  - Added API redirect: `/api/*` → `/.netlify/functions/api/:splat`
+  - Configured secrets scanner to ignore false positives (NODE_ENV, PORT, FINE_PER_DAY)
+
 ## [2.0.0] - 2024-12-07
 
 ### Changed - Database Migration from MySQL to PostgreSQL

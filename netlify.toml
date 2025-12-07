@@ -9,7 +9,25 @@
 
 [build.environment]
   # Tell Netlify's secrets scanner to ignore these non-sensitive env vars
-  # These are flagged because their example values (like "3000", "production", "0.50")
-  # appear in documentation and config files as defaults/examples
   SECRETS_SCAN_OMIT_KEYS = "NODE_ENV,PORT,FINE_PER_DAY"
 
+# Functions configuration
+[functions]
+  # Directory containing Netlify Functions
+  directory = "netlify/functions"
+  
+  # Use esbuild for bundling (faster and handles dependencies better)
+  node_bundler = "esbuild"
+  
+  # External modules that shouldn't be bundled
+  external_node_modules = ["express", "pg", "bcrypt"]
+  
+  # Include all necessary files
+  included_files = ["backend/**"]
+
+# Redirect API calls to the serverless function
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true

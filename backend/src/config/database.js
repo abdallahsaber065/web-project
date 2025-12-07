@@ -50,7 +50,12 @@ const testConnection = async () => {
         client.release();
     } catch (error) {
         console.error('✗ Database connection failed:', error.message);
-        process.exit(1);
+        // In serverless environment, don't exit - let the error propagate
+        const isServerless = process.env.SERVERLESS === 'true' || process.env.NETLIFY === 'true';
+        if (!isServerless) {
+            process.exit(1);
+        }
+        throw error;
     }
 };
 
