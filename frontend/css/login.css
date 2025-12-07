@@ -1,0 +1,38 @@
+ 
+
+.auth-section {
+  min-height: calc(100vh - 200px);
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-lg) 0;
+}
+
+.auth-container {
+  max-width: 450px;
+  margin: 0 auto;
+  background-color: var(--white);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.auth-form {
+  margin-top: var(--spacing-md);
+}
+
+.auth-switch {
+  text-align: center;
+  margin-top: var(--spacing-md);
+}
+
+.demo-credentials {
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background-color: var(--gray-100);
+  border-radius: var(--border-radius-md);
+  font-size: 0.9rem;
+}
+
+.demo-credentials h4 {
+  margin-bottom: var(--spacing-sm);
+}

@@ -1,8 +1,4 @@
-/**
- * Reports Page Styles
- */
-
-/* ==================== REPORTS LAYOUT ==================== */
+ 
 
 .reports-container {
   display: flex;
@@ -10,7 +6,7 @@
   margin-top: var(--spacing-lg);
 }
 
-/* ==================== SIDEBAR ==================== */
+ 
 
 .reports-sidebar {
   width: 280px;
@@ -67,7 +63,7 @@
   font-size: 1.2rem;
 }
 
-/* ==================== MAIN CONTENT ==================== */
+ 
 
 .reports-main {
   flex: 1;
@@ -94,7 +90,7 @@
   font-size: 0.95rem;
 }
 
-/* ==================== REPORT CONTENT ==================== */
+ 
 
 .report-content {
   background: white;
@@ -133,7 +129,7 @@
   opacity: 0.9;
 }
 
-/* ==================== TABLES ==================== */
+ 
 
 .report-table {
   width: 100%;
@@ -166,7 +162,7 @@
   border-bottom: none;
 }
 
-/* ==================== DATE FILTER ==================== */
+ 
 
 .date-filter {
   display: flex;
@@ -199,7 +195,7 @@
   font-size: 0.95rem;
 }
 
-/* ==================== PRINT STYLES ==================== */
+ 
 
 @media print {
   body {
@@ -253,7 +249,7 @@
     display: table-header-group;
   }
 
-  /* Add print header */
+  
   .report-header::before {
     content: "Library Management System - Generated on " attr(data-print-date);
     display: block;
@@ -263,7 +259,7 @@
   }
 }
 
-/* ==================== RESPONSIVE ==================== */
+ 
 
 @media (max-width: 768px) {
   .reports-container {

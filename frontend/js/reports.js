@@ -1,36 +1,21 @@
-/**
- * Reports Page JavaScript
- */
-
-// Current report type
 let currentReport = 'statistics';
 
-// ==================== SIDEBAR NAVIGATION ====================
-
 const initSidebarNavigation = () => {
-    console.log('Initializing sidebar navigation...');
     const links = document.querySelectorAll('.sidebar-link');
-    console.log('Found sidebar links:', links.length);
 
     links.forEach(link => {
         link.addEventListener('click', function () {
             const reportType = this.dataset.report;
-            console.log('Clicked report:', reportType);
 
-            // Update active state
             document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
             this.classList.add('active');
 
-            // Load report
             loadReport(reportType);
         });
     });
 };
 
-// ==================== REPORT LOADING ====================
-
 const loadReport = async (reportType) => {
-    console.log('Loading report:', reportType);
     currentReport = reportType;
     const config = reportConfigs[reportType];
 
@@ -39,19 +24,14 @@ const loadReport = async (reportType) => {
         return;
     }
 
-    // Update header
     document.getElementById('report-title').textContent = config.title;
     document.getElementById('report-description').textContent = config.description;
 
-    // Clear content
     document.getElementById('report-content').innerHTML = '';
     document.getElementById('report-error').style.display = 'none';
 
-    // Load report
     await config.loader();
 };
-
-// ==================== STATISTICS REPORT ====================
 
 const loadStatisticsReport = async () => {
     const loading = document.getElementById('report-loading');
@@ -109,8 +89,6 @@ const loadStatisticsReport = async () => {
     }
 };
 
-// ==================== MOST BORROWED REPORT ====================
-
 const loadMostBorrowedReport = async () => {
     const loading = document.getElementById('report-loading');
     const content = document.getElementById('report-content');
@@ -164,8 +142,6 @@ const loadMostBorrowedReport = async () => {
         errorElement.style.display = 'block';
     }
 };
-
-// ==================== OVERDUE REPORT ====================
 
 const loadOverdueReport = async () => {
     const loading = document.getElementById('report-loading');
@@ -221,8 +197,6 @@ const loadOverdueReport = async () => {
     }
 };
 
-// ==================== MEMBER ACTIVITY REPORT ====================
-
 const loadMemberActivityReport = async () => {
     const loading = document.getElementById('report-loading');
     const content = document.getElementById('report-content');
@@ -277,12 +251,9 @@ const loadMemberActivityReport = async () => {
     }
 };
 
-// ==================== LOANS BY DATE REPORT ====================
-
 const loadLoansByDateReport = async () => {
     const content = document.getElementById('report-content');
 
-    // Create date filter form
     const today = new Date().toISOString().split('T')[0];
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
@@ -301,7 +272,6 @@ const loadLoansByDateReport = async () => {
         <div id="date-report-results"></div>
     `;
 
-    // Add event listener to load button
     document.getElementById('load-date-report').addEventListener('click', async () => {
         const startDate = document.getElementById('start-date').value;
         const endDate = document.getElementById('end-date').value;
@@ -364,13 +334,8 @@ const loadLoansByDateReport = async () => {
         }
     });
 
-    // Auto-load on first render
     document.getElementById('load-date-report').click();
 };
-
-// ==================== REPORT CONFIGURATIONS ====================
-
-// Report configurations - defined after all loader functions
 const reportConfigs = {
     statistics: {
         title: 'Library Statistics',
@@ -399,27 +364,20 @@ const reportConfigs = {
     }
 };
 
-// ==================== INITIALIZE ====================
-
-// Load default report on page load
 document.addEventListener('DOMContentLoaded', () => {
-    // Check authentication and role
     const user = getUser();
     if (!requireAuth() || (user.role !== 'admin' && user.role !== 'librarian')) {
         alert('Access denied. Admin or Librarian role required.');
-        window.location.href = '/dashboard';
+        window.location.href = './dashboard.html';
         return;
     }
 
-    console.log('Initializing reports page...');
     initSidebarNavigation();
     loadReport('statistics').catch(err => console.error('Error loading initial report:', err));
 
-    // Set print date for print header
     document.querySelector('.report-header').setAttribute('data-print-date', new Date().toLocaleDateString());
 });
 
-// Update print date before printing
 window.addEventListener('beforeprint', () => {
     document.querySelector('.report-header').setAttribute('data-print-date', new Date().toLocaleDateString());
 });

@@ -1,7 +1,3 @@
-/**
- * Multi-Select Autocomplete Component
- */
-
 class MultiSelectAutocomplete {
     constructor(containerId, options = {}) {
         this.container = document.getElementById(containerId);
@@ -14,7 +10,6 @@ class MultiSelectAutocomplete {
     }
 
     init() {
-        // ensure container has correct class for styling/positioning
         this.container.classList.add('multi-select-container');
         this.container.innerHTML = `
             <label class="multi-select-label">
@@ -39,7 +34,6 @@ class MultiSelectAutocomplete {
     }
 
     attachEvents() {
-        // Input events
         this.input.addEventListener('input', () => this.handleInput());
         this.input.addEventListener('focus', () => this.showDropdown());
         this.input.addEventListener('keydown', (e) => {
@@ -47,7 +41,6 @@ class MultiSelectAutocomplete {
                 e.preventDefault();
                 const value = this.input.value.trim();
                 if (!value) return;
-                // check for exact match
                 const exact = this.availableItems.find(item => item.name.toLowerCase() === value.toLowerCase());
                 if (exact && !this.isSelected(exact.id, exact.name)) {
                     this.selectedItems.push({ id: exact.id, name: exact.name });
@@ -61,14 +54,12 @@ class MultiSelectAutocomplete {
             }
         });
 
-        // Click outside to close
         document.addEventListener('click', (e) => {
             if (!this.container.contains(e.target)) {
                 this.hideDropdown();
             }
         });
 
-        // Tags container click to focus input
         this.tagsContainer.addEventListener('click', (e) => {
             if (e.target === this.tagsContainer) {
                 this.input.focus();
@@ -108,7 +99,6 @@ class MultiSelectAutocomplete {
 
         let html = '';
 
-        // Show filtered items
         this.filteredItems.forEach(item => {
             if (!this.isSelected(item.id)) {
                 html += `
@@ -119,7 +109,6 @@ class MultiSelectAutocomplete {
             }
         });
 
-        // Show "Create new" option if query doesn't match exactly
         if (query && !this.availableItems.some(item => item.name.toLowerCase() === query.toLowerCase())) {
             html += `
                 <div class="multi-select-option create-new" data-name="${query}">
@@ -130,7 +119,6 @@ class MultiSelectAutocomplete {
 
         this.dropdown.innerHTML = html || '<div class="multi-select-option" style="color: #999;">No results found</div>';
 
-        // Attach click events
         this.dropdown.querySelectorAll('.multi-select-option').forEach(option => {
             option.addEventListener('click', () => this.selectItem(option));
         });
@@ -166,12 +154,10 @@ class MultiSelectAutocomplete {
             `;
         }).join('');
 
-        // Keep input at the end
         const inputElement = this.input;
         this.tagsContainer.innerHTML = tagsHTML;
         this.tagsContainer.appendChild(inputElement);
 
-        // Attach remove events
         this.tagsContainer.querySelectorAll('.multi-select-tag-remove').forEach(remove => {
             remove.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -181,7 +167,6 @@ class MultiSelectAutocomplete {
     }
 
     showDropdown() {
-        // Match dropdown width to tags container and show
         try {
             const rect = this.tagsContainer.getBoundingClientRect();
             this.dropdown.style.minWidth = `${rect.width}px`;
@@ -213,10 +198,8 @@ class MultiSelectAutocomplete {
     }
 
     setSelectedItems(items) {
-        // items can be array of strings (names) or objects with id and name
         this.selectedItems = items.map(item => {
             if (typeof item === 'string') {
-                // Check if item exists in available items
                 const existing = this.availableItems.find(a => a.name === item);
                 return existing ? { id: existing.id, name: existing.name } : { id: null, name: item };
             }

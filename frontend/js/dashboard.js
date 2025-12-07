@@ -1,13 +1,7 @@
-/**
- * Dashboard Page - User loans, reservations, and profile
- */
-
-// Check authentication
 if (!requireAuth()) {
     throw new Error('Authentication required');
 }
 
-// Tab switching
 const tabs = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 
@@ -15,15 +9,12 @@ tabs.forEach(tab => {
     tab.addEventListener('click', () => {
         const tabName = tab.dataset.tab;
 
-        // Remove active class from all tabs and contents
         tabs.forEach(t => t.classList.remove('active'));
         tabContents.forEach(tc => tc.classList.remove('active'));
 
-        // Add active class to clicked tab and corresponding content
         tab.classList.add('active');
         document.getElementById(`${tabName}-tab`).classList.add('active');
 
-        // Load data based on tab
         if (tabName === 'loans') {
             loadMyLoans();
         } else if (tabName === 'reservations') {
@@ -34,7 +25,6 @@ tabs.forEach(tab => {
     });
 });
 
-// Load user's loans
 const loadMyLoans = async () => {
     const loading = document.getElementById('loans-loading');
     const loansList = document.getElementById('loans-list');
@@ -64,7 +54,6 @@ const loadMyLoans = async () => {
     }
 };
 
-// Create loan card
 const createLoanCard = (loan) => {
     const card = document.createElement('div');
     card.className = 'loan-card';
@@ -108,7 +97,6 @@ const createLoanCard = (loan) => {
     return card;
 };
 
-// Return book
 const returnBook = async (loanId) => {
     if (!confirm('Are you sure you want to return this book?')) {
         return;
@@ -134,7 +122,6 @@ const returnBook = async (loanId) => {
     }
 };
 
-// Load user's reservations
 const loadMyReservations = async () => {
     const loading = document.getElementById('reservations-loading');
     const reservationsList = document.getElementById('reservations-list');
@@ -164,7 +151,6 @@ const loadMyReservations = async () => {
     }
 };
 
-// Create reservation card
 const createReservationCard = (reservation) => {
     const card = document.createElement('div');
     card.className = 'reservation-card';
@@ -187,7 +173,6 @@ const createReservationCard = (reservation) => {
     return card;
 };
 
-// Cancel reservation
 const cancelReservation = async (reservationId) => {
     if (!confirm('Are you sure you want to cancel this reservation?')) {
         return;
@@ -208,7 +193,6 @@ const cancelReservation = async (reservationId) => {
     }
 };
 
-// Load user profile
 const loadProfile = async () => {
     const loading = document.getElementById('profile-loading');
     const profileInfo = document.getElementById('profile-info');
@@ -237,13 +221,11 @@ const loadProfile = async () => {
     }
 };
 
-// Set user name in header
 document.addEventListener('DOMContentLoaded', () => {
     const user = getUser();
     if (user) {
         document.getElementById('user-name').textContent = user.name;
     }
 
-    // Load loans by default
     loadMyLoans();
 });
