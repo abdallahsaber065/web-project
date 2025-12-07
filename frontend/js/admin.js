@@ -1,42 +1,51 @@
-/**
- * Admin Panel - Manage books, users, and view reports
- */
+let currentUser;
 
-// Check authentication and role
-const user = getUser();
-if (!requireAuth() || (user.role !== 'admin' && user.role !== 'librarian')) {
-    alert('Access denied. Admin or Librarian role required.');
-    window.location.href = '/dashboard';
-}
+const ensureAccess = () => {
+    const user = getUser();
+    const allowed = user && requireAuth() && (user.role === 'admin' || user.role === 'librarian');
+    if (!allowed) {
+        alert('Access denied. Admin or Librarian role required.');
+        window.location.href = './dashboard.html';
+        return null;
+    }
+    return user;
+};
 
-// Tab switching
-const tabs = document.querySelectorAll('.tab-btn');
-const tabContents = document.querySelectorAll('.tab-content');
+const initTabs = () => {
+    const tabs = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    if (!tabs.length) return;
 
-tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-        const tabName = tab.dataset.tab;
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.dataset.tab;
 
-        tabs.forEach(t => t.classList.remove('active'));
-        tabContents.forEach(tc => tc.classList.remove('active'));
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(tc => tc.classList.remove('active'));
 
-        tab.classList.add('active');
-        document.getElementById(`${tabName}-tab`).classList.add('active');
+            tab.classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
 
-        // Load data based on tab
-        if (tabName === 'statistics') {
-            loadStatistics();
-        } else if (tabName === 'books') {
-            loadAllBooks();
-        } else if (tabName === 'loans') {
-            loadAllLoans();
-        } else if (tabName === 'users' && user.role === 'admin') {
-            loadAllUsers();
-        }
+            if (tabName === 'statistics') {
+                loadStatistics();
+            } else if (tabName === 'books') {
+                loadAllBooks();
+            } else if (tabName === 'loans') {
+                loadAllLoans();
+            } else if (tabName === 'users' && currentUser.role === 'admin') {
+                loadAllUsers();
+            }
+        });
     });
-});
+};
 
-// Load all books (for management)
+const loadStatistics = () => {
+    const container = document.getElementById('statistics-tab');
+    if (container) {
+        container.innerHTML = '<p>Statistics view coming soon.</p>';
+    }
+};
+
 const loadAllBooks = async () => {
     const loading = document.getElementById('books-loading');
     const container = document.getElementById('books-table-container');
@@ -74,7 +83,7 @@ const loadAllBooks = async () => {
                     <td>${book.available_copies}</td>
                     <td>
                         <button onclick="editBook(${book.id})" class="btn btn-secondary">Edit</button>
-                        ${user.role === 'admin' ? `<button onclick="deleteBook(${book.id})" class="btn btn-danger">Delete</button>` : ''}
+                        ${currentUser.role === 'admin' ? `<button onclick="deleteBook(${book.id})" class="btn btn-danger">Delete</button>` : ''}
                     </td>
                 </tr>
             `;
@@ -93,7 +102,6 @@ const loadAllBooks = async () => {
     }
 };
 
-// Load all loans
 const loadAllLoans = async (status = '') => {
     const loading = document.getElementById('loans-loading');
     const container = document.getElementById('loans-table-container');
@@ -150,7 +158,6 @@ const loadAllLoans = async (status = '') => {
     }
 };
 
-// Load all users (admin only)
 const loadAllUsers = async () => {
     const loading = document.getElementById('users-loading');
     const container = document.getElementById('users-table-container');
@@ -204,7 +211,6 @@ const loadAllUsers = async () => {
     }
 };
 
-// Delete book (admin only)
 const deleteBook = async (bookId) => {
     if (!confirm('Are you sure you want to delete this book?')) {
         return;
@@ -222,7 +228,6 @@ const deleteBook = async (bookId) => {
     }
 };
 
-// Delete user (admin only)
 const deleteUser = async (userId) => {
     if (!confirm('Are you sure you want to delete this user?')) {
         return;
@@ -240,16 +245,13 @@ const deleteUser = async (userId) => {
     }
 };
 
-// Filter loans
 document.getElementById('filter-loans-btn')?.addEventListener('click', () => {
     const status = document.getElementById('loan-status-filter').value;
     loadAllLoans(status);
 });
 
-// Initialize multi-select components
 let authorsSelect, categoriesSelect;
 
-// Add book button
 document.getElementById('add-book-btn')?.addEventListener('click', () => {
     const modal = document.getElementById('book-modal');
     const modalTitle = document.getElementById('modal-title');
@@ -260,14 +262,12 @@ document.getElementById('add-book-btn')?.addEventListener('click', () => {
     form.dataset.mode = 'add';
     delete form.dataset.bookId;
 
-    // Initialize multi-selects
     initializeMultiSelects();
 
     modal.style.display = 'block';
     modal.classList.add('active');
 });
 
-// Initialize multi-select components
 function initializeMultiSelects() {
     if (!authorsSelect) {
         authorsSelect = new MultiSelectAutocomplete('authors-select', {
@@ -296,7 +296,6 @@ function initializeMultiSelects() {
     }
 }
 
-// Edit book function
 const editBook = async (bookId) => {
     try {
         const data = await apiRequest(`/books/${bookId}`);
@@ -310,7 +309,6 @@ const editBook = async (bookId) => {
         form.dataset.mode = 'edit';
         form.dataset.bookId = bookId;
 
-        // Populate form fields
         document.getElementById('book-title').value = book.title || '';
         document.getElementById('book-isbn').value = book.isbn || '';
         document.getElementById('book-publisher').value = book.publisher || '';
@@ -319,15 +317,12 @@ const editBook = async (bookId) => {
         document.getElementById('book-available-copies').value = book.available_copies || 1;
         document.getElementById('book-description').value = book.description || '';
 
-        // Initialize multi-selects
         initializeMultiSelects();
 
-        // Set selected authors
         if (book.authors && book.authors.length > 0) {
             authorsSelect.setSelectedItems(book.authors);
         }
 
-        // Set selected categories
         if (book.categories && book.categories.length > 0) {
             categoriesSelect.setSelectedItems(book.categories);
         }
@@ -337,7 +332,7 @@ const editBook = async (bookId) => {
     } catch (error) {
         alert('Error loading book: ' + error.message);
     }
-};// Handle book form submission
+};
 document.getElementById('book-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -374,7 +369,6 @@ document.getElementById('book-form')?.addEventListener('submit', async (e) => {
             alert('Book updated successfully!');
         }
 
-        // Close modal and reload books
         document.getElementById('book-modal').style.display = 'none';
         document.getElementById('book-modal').classList.remove('active');
         loadAllBooks();
@@ -383,7 +377,6 @@ document.getElementById('book-form')?.addEventListener('submit', async (e) => {
     }
 });
 
-// Close modal handlers
 document.querySelector('.close')?.addEventListener('click', () => {
     document.getElementById('book-modal').style.display = 'none';
     document.getElementById('book-modal').classList.remove('active');
@@ -397,7 +390,12 @@ window.addEventListener('click', (e) => {
     }
 });
 
-// Load books by default
-document.addEventListener('DOMContentLoaded', () => {
+const initAdmin = () => {
+    currentUser = ensureAccess();
+    if (!currentUser) return;
+
+    initTabs();
     loadAllBooks();
-});
+};
+
+document.addEventListener('DOMContentLoaded', initAdmin);

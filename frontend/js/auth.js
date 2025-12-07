@@ -1,8 +1,3 @@
-/**
- * Authentication - Login and Register
- */
-
-// Login form handler
 if (document.getElementById('login-form')) {
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -18,15 +13,13 @@ if (document.getElementById('login-form')) {
                 body: JSON.stringify({ email, password })
             });
 
-            // Save token and user
             setAuth(data.data.token, data.data.user);
 
-            // Redirect based on role
             const user = data.data.user;
             if (user.role === 'admin' || user.role === 'librarian') {
-                window.location.href = '/admin';
+                window.location.href = './admin.html';
             } else {
-                window.location.href = '/dashboard';
+                window.location.href = './dashboard.html';
             }
         } catch (error) {
             showError('error-message', error.message);
@@ -34,7 +27,6 @@ if (document.getElementById('login-form')) {
     });
 }
 
-// Register form handler
 if (document.getElementById('register-form')) {
     document.getElementById('register-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -47,7 +39,6 @@ if (document.getElementById('register-form')) {
         hideMessage('error-message');
         hideMessage('success-message');
 
-        // Validate password match
         if (password !== confirmPassword) {
             showError('error-message', 'Passwords do not match');
             return;
@@ -61,9 +52,8 @@ if (document.getElementById('register-form')) {
 
             showSuccess('success-message', 'Registration successful! Redirecting to login...');
 
-            // Redirect to login after 2 seconds
             setTimeout(() => {
-                window.location.href = '/login';
+                window.location.href = './login.html';
             }, 2000);
         } catch (error) {
             showError('error-message', error.message);
